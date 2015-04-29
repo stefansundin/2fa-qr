@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <base target="_blank">
+  <title>2FA QR code generator</title>
+
+  <meta charset="utf-8">
+  <meta name="author" content="Stefan Sundin">
+  <meta name="description" content="2FA QR code generator">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <link rel="icon">
+  <link rel="license" href="https://www.gnu.org/licenses/gpl-3.0.html" title="GNU GPL v3 or later">
+  <link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap-theme.min.css">
+  <link rel="stylesheet" href="https://stefansundin.github.io/css/main.css">
+  <link href="https://fonts.googleapis.com/css?family=Roboto:500,400" rel="stylesheet" type="text/css">
+<style>
+#qr {
+  padding: 25px;
+  text-align: center;
+}
+#app {
+  padding: 10px 20px;
+  background-color: #23282d;
+  border-top: 3px solid #43474b;
+  border-bottom: 3px solid #43474b;
+  font-family: 'Roboto', sans-serif;
+}
+#app_issuer {
+  color: #bebebe;
+  font-size: large;
+}
+#app_code {
+  color: #f3f3f3;
+  font-weight: 500;
+  font-size: xx-large;
+}
+#app_label {
+  color: #808080;
+  font-size: large;
+}
+</style>
+  <script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
+  <script src="https://cdn.rawgit.com/lrsjng/jquery-qrcode/v0.11.0/dist/jquery.qrcode.min.js"></script>
+</head>
+<body>
+  <header>
+    <!-- <div id="icon"></div> -->
+    <hgroup>
+      <h1 itemprop="name">2FA QR code generator</h1>
+      <h2 itemprop="description">Save your 2FA secrets, then use this to scan them again.</h2>
+    </hgroup>
+  </header>
+
+  <div class="container">
+    <hr>
+
+    <p>This is a 2FA QR code generator made in JavaScript that helps you make QR codes out of 2FA secrets. I built it to transfer my 2FA secrets to my Yubikey Neo. I already had the secrets saved but the Yubico Authenticator only supports scanning QR codes. You can of course use this for the normal Google Authenticator app as well.</p>
+
+    <hr>
+
+    <p>
+      <select class="form-control" id="type">
+        <option value="totp">Time based (TOTP)</option>
+        <option value="hotp">Counter based (HOTP)</option>
+      </select>
+    </p>
+
+    <p><input class="form-control" type="text" id="issuer" placeholder="Issuer &mdash; not shown in the Yubico app :("></p>
+    <p><input class="form-control" type="text" id="secret" placeholder="Secret &mdash; Required"></p>
+    <p><input class="form-control" type="text" id="label" placeholder="Label &mdash; Required"></p>
+    <p><input class="form-control" type="text" name="uri" id="uri" disabled></p>
+
+    <hr>
+
+    <div id="qr"></div>
+
+<script>
+// make a nice QR code as the favicon
+$("#qr").empty().qrcode({
+  render: "image",
+  text: "stefansundin"
+});
+$("link[rel=icon]").prop("href", $("#qr img").prop("src"));
+
+function generate() {
+  var type = $("#type").val();
+  var secret = $("#secret").val().replace(/ /g, '');
+  var label = $("#label").val();
+  var uri = "otpauth://"+type+"/"+encodeURIComponent(label)+"?secret="+secret;
+  var issuer = $("#issuer").val();
+  if (issuer) {
+    uri += "&issuer="+encodeURIComponent(issuer);
+  }
+  $("#uri").val(uri);
+  $("#qr").empty().qrcode({
+    text: uri
+  });
+  $("#app_issuer").text(issuer);
+  $("#app_label").text(label);
+}
+generate();
+$("select,input").on("change keyup", generate);
+</script>
+
+    <hr>
+
+    <p>In the Google Authenticator app, it will look like this:</p>
+
+    <div id="app">
+      <div id="app_issuer">Issuer</div>
+      <div id="app_code">123456</div>
+      <div id="app_label">Label</div>
+    </div>
+
+    <hr>
+
+    <ul>
+      <li>Made by <a href="https://stefansundin.github.io/">Stefan Sundin</a>.</li>
+      <li>Uses <a href="http://larsjung.de/jquery-qrcode/">jquery-qrcode</a>.</li>
+      <li>See <a href="https://github.com/google/google-authenticator/wiki/Key-Uri-Format">the docs</a> for the URI format.</li>
+    </ul>
+  </div>
+</body>
+</html>
