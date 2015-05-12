@@ -46,7 +46,6 @@
 </head>
 <body>
   <header>
-    <!-- <div id="icon"></div> -->
     <hgroup>
       <h1 itemprop="name">2FA QR code generator</h1>
       <h2 itemprop="description">Save your 2FA secrets, then use this to scan them again.</h2>
@@ -56,7 +55,7 @@
   <div class="container">
     <hr>
 
-    <p>This is a 2FA QR code generator made in JavaScript that helps you make QR codes out of 2FA secrets. I built it to transfer my 2FA secrets to my Yubikey Neo. I already had the secrets saved but the Yubico Authenticator only supports scanning QR codes. You can of course use this for the normal Google Authenticator app as well.</p>
+    <p>This is a 2FA QR code generator made in JavaScript that helps you make QR codes out of 2FA secrets.</p>
 
     <hr>
 
@@ -67,10 +66,22 @@
       </select>
     </p>
 
-    <p><input class="form-control" type="text" id="issuer" placeholder="Issuer &mdash; not shown in the Yubico app :("></p>
+    <p><input class="form-control" type="text" id="issuer" placeholder="Issuer &mdash; not shown in the Yubico app :(" list="issuers"></p>
     <p><input class="form-control" type="text" id="secret" placeholder="Secret &mdash; Required"></p>
     <p><input class="form-control" type="text" id="label" placeholder="Label &mdash; Required"></p>
+    <p><input class="form-control" type="text" id="counter" placeholder="Initial counter &mdash; Defaults to 0" pattern="\d+"></p>
     <p><input class="form-control" type="text" name="uri" id="uri" disabled></p>
+
+    <datalist id="issuers">
+      <option>Google</option>
+      <option>Apple</option>
+      <option>Facebook</option>
+      <option>DreamHost</option>
+      <option>GitHub</option>
+      <option>Heroku</option>
+      <option>Dropbox</option>
+      <option>Yahoo!</option>
+    </datalist>
 
     <hr>
 
@@ -84,6 +95,18 @@ $("#qr").empty().qrcode({
 });
 $("link[rel=icon]").prop("href", $("#qr img").prop("src"));
 
+function type_changed() {
+  var type = $("#type").val();
+  if (type == "totp") {
+    $("#counter").hide();
+  }
+  else {
+    $("#counter").show();
+  }
+}
+type_changed();
+$("select").on("change keyup", type_changed);
+
 function generate() {
   var type = $("#type").val();
   var secret = $("#secret").val().replace(/ /g, '');
@@ -93,6 +116,10 @@ function generate() {
   if (issuer) {
     uri += "&issuer="+encodeURIComponent(issuer);
   }
+  var counter = $("#counter").val() || "0";
+  if (type == "hotp") {
+    uri += "&counter="+counter;
+  }
   $("#uri").val(uri);
   $("#qr").empty().qrcode({
     text: uri
@@ -101,12 +128,12 @@ function generate() {
   $("#app_label").text(label);
 }
 generate();
-$("select,input").on("change keyup", generate);
+$("select,input").on("change keyup input", generate);
 </script>
 
     <hr>
 
-    <p>In the Google Authenticator app, it will look like this:</p>
+    <p>In Google Authenticator, it will look like this:</p>
 
     <div id="app">
       <div id="app_issuer">Issuer</div>
