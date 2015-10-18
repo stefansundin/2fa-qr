@@ -11,11 +11,44 @@
 
   <link rel="icon">
   <link rel="license" href="https://www.gnu.org/licenses/gpl-3.0.html" title="GNU GPL v3 or later">
-  <link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap.min.css">
-  <link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap-theme.min.css">
-  <link rel="stylesheet" href="https://stefansundin.github.io/css/main.css">
-  <link href="https://fonts.googleapis.com/css?family=Roboto:500,400" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" integrity="sha384-pdapHxIh7EYuwy6K7iE41uXVxGCXY0sAjBzaElYGJUrzwodck3Lx6IE2lA0rFREo" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap-theme.min.css" integrity="sha384-aUGj/X2zp5rLCbBxumKTCw2Z50WgIr1vs/PFN4praOTvYXWlVyh2UtNUU0KAUhAX" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:500,400">
+  <script src="https://code.jquery.com/jquery-2.1.4.min.js" integrity="sha384-R4/ztc4ZlRqWjqIuvf6RX5yb/v90qNGx6fS48N0tRxiGkqveZETq72KgDVJCp2TC" crossorigin="anonymous"></script>
+  <script src="https://cdn.rawgit.com/lrsjng/jquery-qrcode/v0.11.0/dist/jquery.qrcode.min.js" integrity="sha384-XEhB3ncbnXl/jivaHehPfuDCYloM4y9eaNehqnyytrMkobhmlMFnq1YeTgdwb9Oa" crossorigin="anonymous"></script>
 <style>
+body {
+  padding: 0 15px;
+  margin-bottom: 100px;
+}
+a {
+  cursor: pointer;
+}
+.container {
+  padding: 0;
+}
+@media (min-width: 768px) {
+  .container {
+    max-width: 770px;
+  }
+}
+
+header {
+  margin-top: 25px;
+  text-align: center;
+}
+h1 {
+  font-size: 4em;
+  font-weight: 700;
+  margin-bottom: 0.5em;
+}
+h2 {
+  border: none;
+  margin-top: 1em;
+  font-size: 1.5em;
+  font-weight: 400;
+}
+
 #qr {
   padding: 25px;
   text-align: center;
@@ -41,15 +74,11 @@
   font-size: large;
 }
 </style>
-  <script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
-  <script src="https://cdn.rawgit.com/lrsjng/jquery-qrcode/v0.11.0/dist/jquery.qrcode.min.js"></script>
 </head>
 <body>
   <header>
-    <hgroup>
-      <h1 itemprop="name">2FA QR code generator</h1>
-      <h2 itemprop="description">Save your 2FA secrets, then use this to scan them again.</h2>
-    </hgroup>
+    <h1 itemprop="name">2FA QR code generator</h1>
+    <h2 itemprop="description">Save your 2FA secrets, then use this to scan them again.</h2>
   </header>
 
   <div class="container">
@@ -66,10 +95,10 @@
       </select>
     </p>
 
-    <p><input class="form-control" type="text" id="issuer" placeholder="Issuer &mdash; not shown in the Yubico app :(" list="issuers"></p>
-    <p><input class="form-control" type="text" id="secret" placeholder="Secret &mdash; Required"></p>
-    <p><input class="form-control" type="text" id="label" placeholder="Label &mdash; Required"></p>
-    <p><input class="form-control" type="text" id="counter" placeholder="Initial counter &mdash; Defaults to 0" pattern="\d+"></p>
+    <p><input class="form-control" type="search" id="issuer" placeholder="Issuer &mdash; not shown in the Yubico app :(" list="issuers"></p>
+    <p><input class="form-control" type="search" id="secret" placeholder="Secret &mdash; Required"></p>
+    <p><input class="form-control" type="search" id="label" placeholder="Label &mdash; Required"></p>
+    <p><input class="form-control" type="search" id="counter" placeholder="Initial counter &mdash; Defaults to 0" pattern="\d+"></p>
     <p><input class="form-control" type="text" name="uri" id="uri" disabled></p>
 
     <datalist id="issuers">
@@ -145,7 +174,7 @@ $("select,input").on("change keyup input", generate);
 
     <ul>
       <li>Made by <a href="https://stefansundin.github.io/">Stefan Sundin</a>.</li>
-      <li>Uses <a href="http://larsjung.de/jquery-qrcode/">jquery-qrcode</a>.</li>
+      <li>Uses <a href="https://larsjung.de/jquery-qrcode/">jquery-qrcode</a>.</li>
       <li>See <a href="https://github.com/google/google-authenticator/wiki/Key-Uri-Format">the docs</a> for the URI format.</li>
     </ul>
   </div>
