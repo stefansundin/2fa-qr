@@ -54,23 +54,18 @@ h2 {
 }
 #app {
   padding: 10px 20px;
-  background-color: #23282d;
-  border-top: 3px solid #43474b;
-  border-bottom: 3px solid #43474b;
+  background-color: white;
+  border-top: 15px solid #f2f2f2;
+  border-bottom: 15px solid #f2f2f2;
   font-family: 'Roboto', sans-serif;
 }
-#app_issuer {
-  color: #bebebe;
-  font-size: large;
-}
 #app_code {
-  color: #f3f3f3;
+  color: #4285f4;
   font-weight: 500;
   font-size: xx-large;
 }
 #app_label {
-  color: #808080;
-  font-size: large;
+  color: #757575;
 }
 </style>
 </head>
@@ -154,8 +149,7 @@ function generate() {
   $("#qr").empty().qrcode({
     text: uri
   });
-  $("#app_issuer").text(issuer);
-  $("#app_label").text(label);
+  $("#app_label").text(issuer ? `${issuer} (${label})` : label);
 }
 generate();
 $("select,input").on("change keyup input", generate);
@@ -164,12 +158,11 @@ $("select,input").on("change keyup input", generate);
     <hr>
 
     <p>The issuer field does not show up in the Yubico app.</p>
-    <p>In Google Authenticator, it will look like this:</p>
+    <p>In Google Authenticator, it will look something like this:</p>
 
     <div id="app">
-      <div id="app_issuer">Issuer</div>
-      <div id="app_code">123456</div>
-      <div id="app_label">Label</div>
+      <div id="app_code">123 456</div>
+      <div id="app_label">Issuer (label)</div>
     </div>
 
     <hr>
