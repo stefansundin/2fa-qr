@@ -152,6 +152,10 @@ function generate() {
     text: uri
   });
   $("#app_label").text(issuer ? `${issuer} (${label})` : label);
+
+  // mark empty required input fields
+  $("#secret").parents("p").toggleClass("has-error", !secret);
+  $("#label").parents("p").toggleClass("has-error", !label);
 }
 generate();
 $("select,input").on("change keyup input", generate);
