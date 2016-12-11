@@ -48,6 +48,13 @@ h2 {
   font-weight: 400;
 }
 
+#uri {
+  color: gray;
+}
+#uri:focus {
+  color: inherit;
+}
+
 #qr {
   padding: 25px;
   text-align: center;
@@ -93,7 +100,7 @@ h2 {
     <p><input class="form-control" type="search" id="label" placeholder="Label &mdash; Required"></p>
     <p><input class="form-control" type="search" id="issuer" placeholder="Issuer &mdash; Optional" list="issuers"></p>
     <p><input class="form-control" type="search" id="counter" placeholder="Initial counter &mdash; Defaults to 0" pattern="\d+"></p>
-    <p><input class="form-control" type="text" name="uri" id="uri" disabled></p>
+    <p><input class="form-control" type="text" name="uri" id="uri"></p>
 
     <datalist id="issuers">
       <option>Apple</option>
@@ -134,6 +141,21 @@ function type_changed() {
 type_changed();
 $("select").on("change keyup", type_changed);
 
+function update_qr() {
+  var secret = $("#secret").val();
+  var issuer = $("#issuer").val();
+  var label = $("#label").val();
+
+  $("#qr").empty().qrcode({
+    text: $("#uri").val()
+  });
+  $("#app_label").text(issuer ? `${issuer} (${label})` : label);
+
+  // mark empty required input fields
+  $("#secret").parents("p").toggleClass("has-error", !secret);
+  $("#label").parents("p").toggleClass("has-error", !label);
+}
+
 function generate() {
   var type = $("#type").val();
   var secret = $("#secret").val().replace(/ /g, '');
@@ -148,17 +170,32 @@ function generate() {
     uri += "&counter="+counter;
   }
   $("#uri").val(uri);
-  $("#qr").empty().qrcode({
-    text: uri
-  });
-  $("#app_label").text(issuer ? `${issuer} (${label})` : label);
-
-  // mark empty required input fields
-  $("#secret").parents("p").toggleClass("has-error", !secret);
-  $("#label").parents("p").toggleClass("has-error", !label);
+  update_qr();
 }
+
 generate();
-$("select,input").on("change keyup input", generate);
+$("select,input[type='search']").on("change keyup input", generate);
+
+function decode(s) {
+  return s ? decodeURIComponent(s) : undefined;
+}
+
+$("#uri").on("change keyup input", function() {
+  var r = /otpauth:\/\/(totp|hotp)\/([^?]+)?\?secret=([^&]+)(?:&issuer=([^&]+))?(?:&counter=(\d+))?/.exec(this.value);
+  if (r) {
+    $("#uri").parents("p").removeClass("has-error");
+    $("#type").val(r[1]);
+    $("#label").val(decode(r[2]));
+    $("#secret").val(r[3]);
+    $("#issuer").val(decode(r[4]));
+    $("#counter").val(r[5]);
+    type_changed();
+    update_qr();
+  }
+  else {
+    $("#uri").parents("p").addClass("has-error");
+  }
+});
 </script>
 
     <hr>
