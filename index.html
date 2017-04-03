@@ -85,7 +85,7 @@ h2 {
   <div class="container">
     <hr>
 
-    <p>This is a 2FA QR code generator made in JavaScript that helps you make QR codes out of 2FA secrets.</p>
+    <p>This is a 2FA QR code generator made in JavaScript that helps you make QR codes from 2FA secrets.</p>
 
     <hr>
 
@@ -113,6 +113,7 @@ h2 {
       <option>Google</option>
       <option>Heroku</option>
       <option>LastPass</option>
+      <option>Microsoft</option>
       <option>Slack</option>
       <option>Yahoo!</option>
     </datalist>
@@ -120,6 +121,15 @@ h2 {
     <hr>
 
     <div id="qr"></div>
+
+    <hr>
+
+    <p>The issuer parameter is not stored on the Yubikey NEO and will not show up in the Yubico Authenticator app. Check this box to automatically copy the issuer text into the label parameter, mimicing the "issuer (label)" format:</p>
+    <div class="checkbox">
+      <label>
+        <input type="checkbox" id="yubimode"> Yubikey Mode
+      </label>
+    </div>
 
 <script>
 // make a nice QR code as the favicon
@@ -145,63 +155,95 @@ function update_qr() {
   var secret = $("#secret").val();
   var issuer = $("#issuer").val();
   var label = $("#label").val();
+  var uri = generate_uri();
+  if (uri != $("#uri").val()) {
+    $("#uri").val(uri);
+  }
 
   $("#qr").empty().qrcode({
-    text: $("#uri").val()
+    text: uri
   });
-  $("#app_label").text(issuer ? `${issuer} (${label})` : label);
+  if (label == "" && issuer == "") {
+    $("#app_label").text("Issuer (label)");
+  }
+  else {
+    $("#app_label").text(issuer == "" ? label : `${issuer} (${label})`);
+  }
 
+  // remove error on uri field
+  $("#uri").parents("p").removeClass("has-error");
   // mark empty required input fields
-  $("#secret").parents("p").toggleClass("has-error", !secret);
-  $("#label").parents("p").toggleClass("has-error", !label);
+  $("#secret").parents("p").toggleClass("has-error", secret == "");
+  $("#label").parents("p").toggleClass("has-error", label == "");
 }
 
-function generate() {
+function generate_uri() {
   var type = $("#type").val();
   var secret = $("#secret").val().replace(/ /g, '');
   var label = $("#label").val();
-  var uri = "otpauth://"+type+"/"+encodeURIComponent(label)+"?secret="+secret;
   var issuer = $("#issuer").val();
-  if (issuer) {
-    uri += "&issuer="+encodeURIComponent(issuer);
+  var yubimode = $("#yubimode").prop("checked");
+  if (issuer != "" && yubimode) {
+    label = `${issuer} (${label})`;
+  }
+
+  var uri = `otpauth://${type}/${encodeURIComponent(label)}?secret=${secret}`;
+  if (issuer != "" && !yubimode) {
+    uri += `&issuer=${encodeURIComponent(issuer)}`;
   }
   var counter = $("#counter").val() || "0";
   if (type == "hotp") {
-    uri += "&counter="+counter;
+    uri += `&counter=${counter}`;
   }
-  $("#uri").val(uri);
-  update_qr();
+  return uri;
 }
 
-generate();
-$("select,input[type='search']").on("change keyup input", generate);
+$("#yubimode").on("change", function() {
+  if (!this.checked) {
+    var issuer = $("#issuer").val();
+    var label = $("#label").val();
+    var r = /^([^(]+) \(([^)]+)\)?$/.exec(label);
+    if (issuer == "" && r) {
+      $("#issuer").val(r[1]);
+      $("#label").val(r[2]);
+    }
+  }
+});
+
+update_qr();
+$("select,input[type='search'],input[type='checkbox']").on("change keyup input", update_qr);
 
 function decode(s) {
   return s ? decodeURIComponent(s) : undefined;
 }
 
 $("#uri").on("change keyup input", function() {
-  var r = /otpauth:\/\/(totp|hotp)\/([^?]+)?\?secret=([^&]+)(?:&issuer=([^&]+))?(?:&counter=(\d+))?/.exec(this.value);
-  if (r) {
-    $("#uri").parents("p").removeClass("has-error");
-    $("#type").val(r[1]);
-    $("#label").val(decode(r[2]));
-    $("#secret").val(r[3]);
-    $("#issuer").val(decode(r[4]));
-    $("#counter").val(r[5]);
-    type_changed();
-    update_qr();
+  var uri = generate_uri();
+  if (uri == this.value) {
+    // uri did not change, ignoring event
+    return;
   }
-  else {
+
+  var r = /^otpauth:\/\/(totp|hotp)\/([^?]+)\?secret=([^&]+)(?:&issuer=([^&]+))?(?:&counter=(\d+))?/.exec(this.value);
+  if (!r) {
     $("#uri").parents("p").addClass("has-error");
+    return;
   }
+
+  // update fields and generate a new QR code
+  $("#type").val(r[1]);
+  $("#label").val(decode(r[2]));
+  $("#secret").val(r[3]);
+  $("#issuer").val(decode(r[4]));
+  $("#counter").val(r[5]);
+  type_changed();
+  update_qr();
 });
 </script>
 
     <hr>
 
-    <p>The issuer field does not show up in the Yubico app.</p>
-    <p>In Google Authenticator, it will look something like this:</p>
+    <p>In the Google Authenticator app, it will look something like this:</p>
 
     <div id="app">
       <div id="app_code">123 456</div>
