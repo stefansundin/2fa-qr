@@ -100,7 +100,7 @@ h2 {
     <p><input class="form-control" type="search" id="label" placeholder="Label &mdash; Required"></p>
     <p><input class="form-control" type="search" id="issuer" placeholder="Issuer &mdash; Optional" list="issuers"></p>
     <p><input class="form-control" type="search" id="counter" placeholder="Initial counter &mdash; Defaults to 0" pattern="\d+"></p>
-    <p><input class="form-control" type="text" name="uri" id="uri"></p>
+    <p><input class="form-control" type="text" name="uri" id="uri" placeholder="otpauth://" spellcheck="false"></p>
 
     <datalist id="issuers">
       <option>Apple</option>
@@ -151,32 +151,6 @@ function type_changed() {
 type_changed();
 $("select").on("change keyup", type_changed);
 
-function update_qr() {
-  var secret = $("#secret").val();
-  var issuer = $("#issuer").val();
-  var label = $("#label").val();
-  var uri = generate_uri();
-  if (uri != $("#uri").val()) {
-    $("#uri").val(uri);
-  }
-
-  $("#qr").empty().qrcode({
-    text: uri
-  });
-  if (label == "" && issuer == "") {
-    $("#app_label").text("Issuer (label)");
-  }
-  else {
-    $("#app_label").text(issuer == "" ? label : `${issuer} (${label})`);
-  }
-
-  // remove error on uri field
-  $("#uri").parents("p").removeClass("has-error");
-  // mark empty required input fields
-  $("#secret").parents("p").toggleClass("has-error", secret == "");
-  $("#label").parents("p").toggleClass("has-error", label == "");
-}
-
 function generate_uri() {
   var type = $("#type").val();
   var secret = $("#secret").val().replace(/ /g, '');
@@ -196,6 +170,39 @@ function generate_uri() {
     uri += `&counter=${counter}`;
   }
   return uri;
+}
+
+function update_val(el, text) {
+  var start = el.selectionStart;
+  var end = el.selectionEnd;
+  el.value = text;
+  el.setSelectionRange(start, end);
+}
+
+function update_qr() {
+  var secret = $("#secret").val();
+  var issuer = $("#issuer").val();
+  var label = $("#label").val();
+  var uri = generate_uri();
+  if (uri != $("#uri").val()) {
+    update_val($("#uri")[0], uri);
+  }
+
+  $("#qr").empty().qrcode({
+    text: uri
+  });
+  if (label == "" && issuer == "") {
+    $("#app_label").text("Issuer (label)");
+  }
+  else {
+    $("#app_label").text(issuer == "" ? label : `${issuer} (${label})`);
+  }
+
+  // remove error on uri field
+  $("#uri").parents("p").removeClass("has-error");
+  // mark empty required input fields
+  $("#secret").parents("p").toggleClass("has-error", secret == "");
+  $("#label").parents("p").toggleClass("has-error", label == "");
 }
 
 $("#yubimode").on("change", function() {
@@ -218,15 +225,19 @@ function decode(s) {
 }
 
 $("#uri").on("change keyup input", function() {
-  var uri = generate_uri();
-  if (uri == this.value) {
-    // uri did not change, ignoring event
+  // validate and parse uri
+  var r = /^otpauth:\/\/([th]otp)\/([^?]+)\?secret=([^&]+)(?:&issuer=([^&]+))?(?:&counter=(\d+))?$/.exec(this.value);
+  if (r) {
+    $("#uri").parents("p").removeClass("has-error");
+  }
+  else {
+    $("#uri").parents("p").addClass("has-error");
     return;
   }
 
-  var r = /^otpauth:\/\/(totp|hotp)\/([^?]+)\?secret=([^&]+)(?:&issuer=([^&]+))?(?:&counter=(\d+))?/.exec(this.value);
-  if (!r) {
-    $("#uri").parents("p").addClass("has-error");
+  var uri = generate_uri();
+  if (uri == this.value) {
+    // uri did not change
     return;
   }
 
@@ -235,7 +246,7 @@ $("#uri").on("change keyup input", function() {
   $("#label").val(decode(r[2]));
   $("#secret").val(r[3]);
   $("#issuer").val(decode(r[4]));
-  $("#counter").val(r[5]);
+  $("#counter").val(r[5] == "0" ? "": r[5]);
   type_changed();
   update_qr();
 });
