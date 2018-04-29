@@ -1,30 +1,24 @@
-<!DOCTYPE html>
-<html>
+<!doctype html>
+<html lang="en">
 <head>
   <title>2FA QR code generator</title>
 
   <meta charset="utf-8">
   <meta name="author" content="Stefan Sundin">
   <meta name="description" content="2FA QR code generator">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
   <link rel="icon">
   <link rel="license" href="https://www.gnu.org/licenses/gpl-3.0.html" title="GNU GPL v3 or later">
-  <link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" integrity="sha384-pdapHxIh7EYuwy6K7iE41uXVxGCXY0sAjBzaElYGJUrzwodck3Lx6IE2lA0rFREo" crossorigin="anonymous">
-  <link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap-theme.min.css" integrity="sha384-aUGj/X2zp5rLCbBxumKTCw2Z50WgIr1vs/PFN4praOTvYXWlVyh2UtNUU0KAUhAX" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.0/css/bootstrap.min.css" integrity="sha384-9gVQ4dYFwwWSjIDZnLEWnxCjeSWFphJiwGPXr1jddIhOegiu1FwO5qRGvFXOdJZ4" crossorigin="anonymous">
+
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:500,400">
-  <script src="https://code.jquery.com/jquery-2.1.4.min.js" integrity="sha384-R4/ztc4ZlRqWjqIuvf6RX5yb/v90qNGx6fS48N0tRxiGkqveZETq72KgDVJCp2TC" crossorigin="anonymous"></script>
-  <script src="https://cdn.rawgit.com/lrsjng/jquery-qrcode/v0.11.0/dist/jquery.qrcode.min.js" integrity="sha384-XEhB3ncbnXl/jivaHehPfuDCYloM4y9eaNehqnyytrMkobhmlMFnq1YeTgdwb9Oa" crossorigin="anonymous"></script>
+  <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+  <script src="https://cdn.rawgit.com/lrsjng/jquery-qrcode/v0.14.0/dist/jquery-qrcode.min.js" integrity="sha384-BrZGf2D/R3HVPz9JtfTVrbaUyVVaFKZWO2MTcoL80nBcGZBsRhbjCSsFXUGAEO45" crossorigin="anonymous"></script>
 <style>
 body {
   padding: 0 15px;
   margin-bottom: 100px;
-}
-a {
-  cursor: pointer;
-}
-.container {
-  padding: 0;
 }
 @media (min-width: 768px) {
   .container {
@@ -42,7 +36,6 @@ h1 {
   margin-bottom: 0.5em;
 }
 h2 {
-  border: none;
   margin-top: 1em;
   font-size: 1.5em;
   font-weight: 400;
@@ -148,11 +141,11 @@ h2 {
 
     <hr>
 
-    <p>The issuer parameter is not stored on the Yubikey NEO and will not show up in the Yubico Authenticator app. Check this box to automatically copy the issuer text into the label parameter, mimicing the "issuer (label)" format:</p>
-    <div class="checkbox">
-      <label>
-        <input type="checkbox" id="yubimode"> Yubikey Mode
-      </label>
+    <p>The issuer parameter is not stored on the Yubikey NEO and will not show up in the Yubico Authenticator app. Check this box to automatically copy the issuer text into the label parameter, mimicing the "issuer (label)" format.</p>
+
+    <div class="form-group form-check">
+      <input type="checkbox" class="form-check-input" id="yubimode">
+      <label class="form-check-label" for="yubimode">Yubikey Mode</label>
     </div>
 
 <script>
@@ -189,8 +182,8 @@ function generate_uri() {
   if (issuer != "" && !yubimode) {
     uri += `&issuer=${encodeURIComponent(issuer)}`;
   }
-  var counter = $("#counter").val() || "0";
   if (type == "hotp") {
+    var counter = $("#counter").val() || "0";
     uri += `&counter=${counter}`;
   }
   return uri;
@@ -223,10 +216,10 @@ function update_qr() {
   }
 
   // remove error on uri field
-  $("#uri").parents("p").removeClass("has-error");
+  $("#uri").removeClass("is-invalid");
   // mark empty required input fields
-  $("#secret").parents("p").toggleClass("has-error", secret == "");
-  $("#label").parents("p").toggleClass("has-error", label == "");
+  $("#secret").toggleClass("is-invalid", secret == "");
+  $("#label").toggleClass("is-invalid", label == "");
 }
 
 $("#yubimode").on("change", function() {
@@ -252,10 +245,10 @@ $("#uri").on("change keyup input", function() {
   // validate and parse uri
   var r = /^otpauth:\/\/([th]otp)\/([^?]+)\?secret=([^&]+)(?:&issuer=([^&]+))?(?:&counter=(\d+))?$/.exec(this.value);
   if (r) {
-    $("#uri").parents("p").removeClass("has-error");
+    $("#uri").removeClass("is-invalid");
   }
   else {
-    $("#uri").parents("p").addClass("has-error");
+    $("#uri").addClass("is-invalid");
     return;
   }
 
@@ -289,6 +282,7 @@ $("#uri").on("change keyup input", function() {
 
     <ul>
       <li>Made by <a href="https://stefansundin.github.io/">Stefan Sundin</a>.</li>
+      <li>Get <a href="https://github.com/stefansundin/2fa-qr">the source code</a>.</li>
       <li>Uses <a href="https://larsjung.de/jquery-qrcode/">jquery-qrcode</a>.</li>
       <li>See <a href="https://github.com/google/google-authenticator/wiki/Key-Uri-Format">the docs</a> for the URI format.</li>
     </ul>
