@@ -93,6 +93,23 @@ h2 {
     <p><input class="form-control" type="search" id="label" placeholder="Label &mdash; Required" spellcheck="false"></p>
     <p><input class="form-control" type="search" id="issuer" placeholder="Issuer &mdash; Optional" list="issuers" spellcheck="false"></p>
     <p><input class="form-control" type="search" id="counter" placeholder="Initial counter &mdash; Defaults to 0" pattern="\d+" spellcheck="false"></p>
+    <div class="custom-control custom-checkbox">
+      <p><input class="custom-control-input" type="checkbox" id="adv_options"><label class="custom-control-label" for="adv_options">Show advanced settings</label></p>
+    </div>
+    <p>
+      <select class="form-control" id="algorithm">
+        <option value="SHA1">SHA1 algorithm (Default)</option>
+        <option value="SHA256">SHA256 algorithm</option>
+        <option value="SHA512">SHA512 algorithm</option>
+      </select>
+    </p>
+    <p>
+      <select class="form-control" id="digits">
+        <option value="6">6 digits (Default)</option>
+        <option value="8">8 digits</option>
+      </select>
+    </p>
+    <p><input class="form-control" type="search" id="period" placeholder="Valid period, in seconds &mdash; Defaults to 30" pattern="\d+" spellcheck="false"></p>
     <p><input class="form-control" type="text" id="uri" placeholder="otpauth://" spellcheck="false"></p>
 
     <datalist id="issuers">
@@ -156,6 +173,26 @@ $("#qr").empty().qrcode({
 });
 $("link[rel=icon]").prop("href", $("#qr img").prop("src"));
 
+function adv_options_changed() {
+  if( $("#adv_options").prop("checked") ) {
+    $("#algorithm").show();
+    $("#digits").show();
+    if( $("#type").val() == "totp" ) {
+      $("#period").show();
+    }
+    else {
+      $("#period").hide();
+    }
+  }
+  else {
+    $("#algorithm").hide();
+    $("#digits").hide();
+    $("#period").hide();
+  }
+}
+$("#adv_options").prop("checked", false);
+$("#adv_options").on("change keyup", adv_options_changed);
+
 function type_changed() {
   var type = $("#type").val();
   if (type == "totp") {
@@ -164,6 +201,7 @@ function type_changed() {
   else {
     $("#counter").show();
   }
+  adv_options_changed();
 }
 type_changed();
 $("#type").on("change keyup", type_changed);
@@ -174,6 +212,9 @@ function generate_uri() {
   var label = $("#label").val();
   var issuer = $("#issuer").val();
   var yubimode = $("#yubimode").prop("checked");
+  var adv_options = $("#adv_options").prop("checked");
+  var algorithm = $("#algorithm").val();
+  var digits = $("#digits").val();
   if (issuer != "" && yubimode) {
     label = `${issuer} (${label})`;
   }
@@ -185,6 +226,13 @@ function generate_uri() {
   if (type == "hotp") {
     var counter = $("#counter").val() || "0";
     uri += `&counter=${counter}`;
+  }
+  if ( adv_options ) {
+    uri += `&algorithm=${algorithm}&digits=${digits}`;
+    if (type == "totp") {
+      var period = $("#period").val() || "30";
+      uri += `&period=${period}`;
+    }
   }
   return uri;
 }
