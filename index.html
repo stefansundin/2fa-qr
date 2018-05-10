@@ -291,7 +291,7 @@ function decode(s) {
 
 $("#uri").on("change keyup input", function() {
   // validate and parse uri
-  var r = /^otpauth:\/\/([th]otp)\/([^?]+)\?secret=([^&]+)(?:&issuer=([^&]+))?(?:&counter=(\d+))?$/.exec(this.value);
+  var r = /^otpauth:\/\/([th]otp)\/([^?]+)\?secret=([^&]+)(?:&issuer=([^&]+))?(?:&counter=(\d+))?(?:&algorithm=(SHA1|SHA256|SHA512))?(?:&digits=(6|8))?(?:&period=(\d+))?$/.exec(this.value);
   if (r) {
     $("#uri").removeClass("is-invalid");
   }
@@ -312,6 +312,9 @@ $("#uri").on("change keyup input", function() {
   $("#secret").val(r[3]);
   $("#issuer").val(decode(r[4]));
   $("#counter").val(r[5] == "0" ? "": r[5]);
+  $("#algorithm").val(r[6]);
+  $("#digits").val(r[7]);
+  $("#period").val(r[8] == "30" ? "": r[8]);
   type_changed();
   update_qr();
 });
