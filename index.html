@@ -166,7 +166,7 @@ function type_changed() {
   }
 }
 type_changed();
-$("select").on("change keyup", type_changed);
+$("#type").on("change keyup", type_changed);
 
 function generate_uri() {
   var type = $("#type").val();
