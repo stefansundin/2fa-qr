@@ -96,6 +96,9 @@ h2 {
     <div class="custom-control custom-checkbox">
       <p><input class="custom-control-input" type="checkbox" id="adv_options"><label class="custom-control-label" for="adv_options">Show advanced settings</label></p>
     </div>
+    <div id="adv_options_txt">
+      <p>Please note that advanced settings are not supported by the Google Authenticator app yet: all advanced settings are ignored, and default values are used. <a href="https://www.yubico.com/products/services-software/download/yubico-authenticator/">Yubico Authenticator</a> support these advanced settings.</p>
+    </div>
     <p>
       <select class="form-control" id="algorithm">
         <option value="SHA1">SHA1 algorithm (Default)</option>
@@ -110,6 +113,7 @@ h2 {
       </select>
     </p>
     <p><input class="form-control" type="search" id="period" placeholder="Valid period, in seconds &mdash; Defaults to 30" pattern="\d+" spellcheck="false"></p>
+    <hr>
     <p><input class="form-control" type="text" id="uri" placeholder="otpauth://" spellcheck="false"></p>
 
     <datalist id="issuers">
@@ -175,6 +179,7 @@ $("link[rel=icon]").prop("href", $("#qr img").prop("src"));
 
 function adv_options_changed() {
   if( $("#adv_options").prop("checked") ) {
+    document.getElementById("adv_options_txt").style.display = "block";
     $("#algorithm").show();
     $("#digits").show();
     if( $("#type").val() == "totp" ) {
@@ -185,6 +190,7 @@ function adv_options_changed() {
     }
   }
   else {
+    document.getElementById("adv_options_txt").style.display = "none";
     $("#algorithm").hide();
     $("#digits").hide();
     $("#period").hide();
@@ -329,8 +335,6 @@ $("#uri").on("change keyup input", function() {
       <div id="app_label">Issuer (label)</div>
     </div>
 
-    <br>
-    <p>Please note that the advanced settings are not supported by the Google Authenticator app yet. All advanced settings are ignored by this app, and default values are used.</p>
     <hr>
 
     <ul>
