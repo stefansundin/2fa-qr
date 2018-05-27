@@ -227,7 +227,7 @@ function generate_uri() {
     var counter = $("#counter").val() || "0";
     uri += `&counter=${counter}`;
   }
-  if ( adv_options ) {
+  if (adv_options) {
     uri += `&algorithm=${algorithm}&digits=${digits}`;
     if (type == "totp") {
       var period = $("#period").val() || "30";
