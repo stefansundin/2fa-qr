@@ -156,18 +156,7 @@ h2 {
       <option>Yahoo!</option>
     </datalist>
 
-    <hr>
-
     <div id="qr"></div>
-
-    <hr>
-
-    <p>The issuer parameter is not stored on the Yubikey NEO and will not show up in the Yubico Authenticator app. Check this box to automatically copy the issuer text into the label parameter, mimicing the "issuer (label)" format.</p>
-
-    <div class="form-group form-check">
-      <input type="checkbox" class="form-check-input" id="yubimode">
-      <label class="form-check-label" for="yubimode">Yubikey Mode</label>
-    </div>
 
 <script>
 // make a nice QR code as the favicon
@@ -217,16 +206,12 @@ function generate_uri() {
   var secret = $("#secret").val().replace(/ /g, '');
   var label = $("#label").val();
   var issuer = $("#issuer").val();
-  var yubimode = $("#yubimode").prop("checked");
   var adv_options = $("#adv_options").prop("checked");
   var algorithm = $("#algorithm").val();
   var digits = $("#digits").val();
-  if (issuer != "" && yubimode) {
-    label = `${issuer} (${label})`;
-  }
 
   var uri = `otpauth://${type}/${encodeURIComponent(label)}?secret=${secret}`;
-  if (issuer != "" && !yubimode) {
+  if (issuer != "") {
     uri += `&issuer=${encodeURIComponent(issuer)}`;
   }
   if (type == "hotp") {
@@ -275,18 +260,6 @@ function update_qr() {
   $("#secret").toggleClass("is-invalid", secret == "");
   $("#label").toggleClass("is-invalid", label == "");
 }
-
-$("#yubimode").on("change", function() {
-  if (!this.checked) {
-    var issuer = $("#issuer").val();
-    var label = $("#label").val();
-    var r = /^([^(]+) \(([^)]+)\)?$/.exec(label);
-    if (issuer == "" && r) {
-      $("#issuer").val(r[1]);
-      $("#label").val(r[2]);
-    }
-  }
-});
 
 update_qr();
 $("select,input[type='search'],input[type='checkbox']").on("change keyup input", update_qr);
