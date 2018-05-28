@@ -93,6 +93,27 @@ h2 {
     <p><input class="form-control" type="search" id="label" placeholder="Label &mdash; Required" spellcheck="false"></p>
     <p><input class="form-control" type="search" id="issuer" placeholder="Issuer &mdash; Optional" list="issuers" spellcheck="false"></p>
     <p><input class="form-control" type="search" id="counter" placeholder="Initial counter &mdash; Defaults to 0" pattern="\d+" spellcheck="false"></p>
+    <div class="custom-control custom-checkbox">
+      <p><input class="custom-control-input" type="checkbox" id="adv_options"><label class="custom-control-label" for="adv_options">Show advanced settings</label></p>
+    </div>
+    <div id="adv_options_txt">
+      <p>Please note that advanced settings are not supported by the Google Authenticator app yet: all advanced settings are ignored, and default values are used. <a href="https://www.yubico.com/products/services-software/download/yubico-authenticator/">Yubico Authenticator</a> support these advanced settings.</p>
+    </div>
+    <p>
+      <select class="form-control" id="algorithm">
+        <option value="SHA1">SHA1 algorithm (Default)</option>
+        <option value="SHA256">SHA256 algorithm</option>
+        <option value="SHA512">SHA512 algorithm</option>
+      </select>
+    </p>
+    <p>
+      <select class="form-control" id="digits">
+        <option value="6">6 digits (Default)</option>
+        <option value="8">8 digits</option>
+      </select>
+    </p>
+    <p><input class="form-control" type="search" id="period" placeholder="Valid period, in seconds &mdash; Defaults to 30" pattern="\d+" spellcheck="false"></p>
+    <hr>
     <p><input class="form-control" type="text" id="uri" placeholder="otpauth://" spellcheck="false"></p>
 
     <datalist id="issuers">
@@ -156,6 +177,28 @@ $("#qr").empty().qrcode({
 });
 $("link[rel=icon]").prop("href", $("#qr img").prop("src"));
 
+function adv_options_changed() {
+  if( $("#adv_options").prop("checked") ) {
+    document.getElementById("adv_options_txt").style.display = "block";
+    $("#algorithm").show();
+    $("#digits").show();
+    if( $("#type").val() == "totp" ) {
+      $("#period").show();
+    }
+    else {
+      $("#period").hide();
+    }
+  }
+  else {
+    document.getElementById("adv_options_txt").style.display = "none";
+    $("#algorithm").hide();
+    $("#digits").hide();
+    $("#period").hide();
+  }
+}
+$("#adv_options").prop("checked", false);
+$("#adv_options").on("change keyup", adv_options_changed);
+
 function type_changed() {
   var type = $("#type").val();
   if (type == "totp") {
@@ -164,9 +207,10 @@ function type_changed() {
   else {
     $("#counter").show();
   }
+  adv_options_changed();
 }
 type_changed();
-$("select").on("change keyup", type_changed);
+$("#type").on("change keyup", type_changed);
 
 function generate_uri() {
   var type = $("#type").val();
@@ -174,6 +218,9 @@ function generate_uri() {
   var label = $("#label").val();
   var issuer = $("#issuer").val();
   var yubimode = $("#yubimode").prop("checked");
+  var adv_options = $("#adv_options").prop("checked");
+  var algorithm = $("#algorithm").val();
+  var digits = $("#digits").val();
   if (issuer != "" && yubimode) {
     label = `${issuer} (${label})`;
   }
@@ -185,6 +232,13 @@ function generate_uri() {
   if (type == "hotp") {
     var counter = $("#counter").val() || "0";
     uri += `&counter=${counter}`;
+  }
+  if (adv_options) {
+    uri += `&algorithm=${algorithm}&digits=${digits}`;
+    if (type == "totp") {
+      var period = $("#period").val() || "30";
+      uri += `&period=${period}`;
+    }
   }
   return uri;
 }
@@ -243,7 +297,7 @@ function decode(s) {
 
 $("#uri").on("change keyup input", function() {
   // validate and parse uri
-  var r = /^otpauth:\/\/([th]otp)\/([^?]+)\?secret=([^&]+)(?:&issuer=([^&]+))?(?:&counter=(\d+))?$/.exec(this.value);
+  var r = /^otpauth:\/\/([th]otp)\/([^?]+)\?secret=([^&]+)(?:&issuer=([^&]+))?(?:&counter=(\d+))?(?:&algorithm=(SHA1|SHA256|SHA512))?(?:&digits=(6|8))?(?:&period=(\d+))?$/.exec(this.value);
   if (r) {
     $("#uri").removeClass("is-invalid");
   }
@@ -264,6 +318,9 @@ $("#uri").on("change keyup input", function() {
   $("#secret").val(r[3]);
   $("#issuer").val(decode(r[4]));
   $("#counter").val(r[5] == "0" ? "": r[5]);
+  $("#algorithm").val(r[6]);
+  $("#digits").val(r[7]);
+  $("#period").val(r[8] == "30" ? "": r[8]);
   type_changed();
   update_qr();
 });
