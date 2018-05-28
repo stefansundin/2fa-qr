@@ -195,8 +195,6 @@ function generate_uri() {
   var label = $("#label").val();
   var issuer = $("#issuer").val();
   var adv_options = $("#adv_options").prop("checked");
-  var algorithm = $("#algorithm").val();
-  var digits = $("#digits").val();
 
   var uri = `otpauth://${type}/${encodeURIComponent(label)}?secret=${secret}`;
   if (issuer != "") {
@@ -207,6 +205,8 @@ function generate_uri() {
     uri += `&counter=${counter}`;
   }
   if (adv_options) {
+    var algorithm = $("#algorithm").val();
+    var digits = $("#digits").val();
     uri += `&algorithm=${algorithm}&digits=${digits}`;
     if (type == "totp") {
       var period = $("#period").val() || "30";
@@ -267,6 +267,9 @@ $("#uri").on("change keyup input", function() {
     return;
   }
 
+  $("#adv_options").prop("checked", r[6] != undefined || r[7] != undefined || r[8] != undefined);
+  adv_options_changed();
+
   var uri = generate_uri();
   if (uri == this.value) {
     // uri did not change
@@ -279,8 +282,8 @@ $("#uri").on("change keyup input", function() {
   $("#secret").val(r[3]);
   $("#issuer").val(decode(r[4]));
   $("#counter").val(r[5] == "0" ? "": r[5]);
-  $("#algorithm").val(r[6]);
-  $("#digits").val(r[7]);
+  $("#algorithm").val(r[6] || "SHA1");
+  $("#digits").val(r[7] || "6");
   $("#period").val(r[8] == "30" ? "": r[8]);
   type_changed();
   update_qr();
