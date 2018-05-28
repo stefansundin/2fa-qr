@@ -9,7 +9,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
   <link rel="icon">
-  <link rel="license" href="https://www.gnu.org/licenses/gpl-3.0.html" title="GNU GPL v3 or later">
+  <link rel="license" href="https://www.gnu.org/licenses/gpl-3.0.html" title="GNU GPL 3.0 or later">
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.0/css/bootstrap.min.css" integrity="sha384-9gVQ4dYFwwWSjIDZnLEWnxCjeSWFphJiwGPXr1jddIhOegiu1FwO5qRGvFXOdJZ4" crossorigin="anonymous">
 
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:500,400">
@@ -93,32 +93,36 @@ h2 {
     <p><input class="form-control" type="search" id="label" placeholder="Label &mdash; Required" spellcheck="false"></p>
     <p><input class="form-control" type="search" id="issuer" placeholder="Issuer &mdash; Optional" list="issuers" spellcheck="false"></p>
     <p><input class="form-control" type="search" id="counter" placeholder="Initial counter &mdash; Defaults to 0" pattern="\d+" spellcheck="false"></p>
+
     <div class="custom-control custom-checkbox">
       <p><input class="custom-control-input" type="checkbox" id="adv_options"><label class="custom-control-label" for="adv_options">Show advanced settings</label></p>
     </div>
-    <div id="adv_options_txt">
+
+    <div id="adv_options_container">
       <p>Please note that advanced settings are not supported by the Google Authenticator app yet: all advanced settings are ignored, and default values are used. <a href="https://www.yubico.com/products/services-software/download/yubico-authenticator/">Yubico Authenticator</a> support these advanced settings.</p>
+      <p>
+        <select class="form-control" id="algorithm">
+          <option value="SHA1">SHA1 algorithm (Default)</option>
+          <option value="SHA256">SHA256 algorithm</option>
+          <option value="SHA512">SHA512 algorithm</option>
+        </select>
+      </p>
+      <p>
+        <select class="form-control" id="digits">
+          <option value="6">6 digits (Default)</option>
+          <option value="8">8 digits</option>
+        </select>
+      </p>
+      <p><input class="form-control" type="search" id="period" placeholder="Valid period, in seconds &mdash; Defaults to 30" pattern="\d+" spellcheck="false"></p>
     </div>
-    <p>
-      <select class="form-control" id="algorithm">
-        <option value="SHA1">SHA1 algorithm (Default)</option>
-        <option value="SHA256">SHA256 algorithm</option>
-        <option value="SHA512">SHA512 algorithm</option>
-      </select>
-    </p>
-    <p>
-      <select class="form-control" id="digits">
-        <option value="6">6 digits (Default)</option>
-        <option value="8">8 digits</option>
-      </select>
-    </p>
-    <p><input class="form-control" type="search" id="period" placeholder="Valid period, in seconds &mdash; Defaults to 30" pattern="\d+" spellcheck="false"></p>
+
     <hr>
     <p><input class="form-control" type="text" id="uri" placeholder="otpauth://" spellcheck="false"></p>
 
     <datalist id="issuers">
       <option>Apple</option>
       <option>AWS</option>
+      <option>Blizzard</option>
       <option>Cloudflare</option>
       <option>Coinbase</option>
       <option>Discord</option>
@@ -167,25 +171,9 @@ $("#qr").empty().qrcode({
 $("link[rel=icon]").prop("href", $("#qr img").prop("src"));
 
 function adv_options_changed() {
-  if( $("#adv_options").prop("checked") ) {
-    document.getElementById("adv_options_txt").style.display = "block";
-    $("#algorithm").show();
-    $("#digits").show();
-    if( $("#type").val() == "totp" ) {
-      $("#period").show();
-    }
-    else {
-      $("#period").hide();
-    }
-  }
-  else {
-    document.getElementById("adv_options_txt").style.display = "none";
-    $("#algorithm").hide();
-    $("#digits").hide();
-    $("#period").hide();
-  }
+  $("#adv_options_container").toggle($("#adv_options").prop("checked"));
+  $("#period").toggle($("#type").val() == "totp");
 }
-$("#adv_options").prop("checked", false);
 $("#adv_options").on("change keyup", adv_options_changed);
 
 function type_changed() {
