@@ -179,7 +179,7 @@ function adv_options_changed() {
 $("#adv_options").on("change keyup", adv_options_changed);
 
 function type_changed() {
-  var type = $("#type").val();
+  const type = $("#type").val();
   if (type == "totp") {
     $("#counter").hide();
   }
@@ -192,26 +192,26 @@ type_changed();
 $("#type").on("change keyup", type_changed);
 
 function generate_uri() {
-  var type = $("#type").val();
-  var secret = $("#secret").val().replace(/ /g, '');
-  var label = $("#label").val();
-  var issuer = $("#issuer").val();
-  var adv_options = $("#adv_options").prop("checked");
+  const type = $("#type").val();
+  const secret = $("#secret").val().replace(/ /g, '');
+  const label = $("#label").val();
+  const issuer = $("#issuer").val();
+  const adv_options = $("#adv_options").prop("checked");
 
-  var uri = `otpauth://${type}/${encodeURIComponent(label)}?secret=${secret}`;
+  let uri = `otpauth://${type}/${encodeURIComponent(label)}?secret=${secret}`;
   if (issuer != "") {
     uri += `&issuer=${encodeURIComponent(issuer)}`;
   }
   if (type == "hotp") {
-    var counter = $("#counter").val() || "0";
+    const counter = $("#counter").val() || "0";
     uri += `&counter=${counter}`;
   }
   if (adv_options) {
-    var algorithm = $("#algorithm").val();
-    var digits = $("#digits").val();
+    const algorithm = $("#algorithm").val();
+    const digits = $("#digits").val();
     uri += `&algorithm=${algorithm}&digits=${digits}`;
     if (type == "totp") {
-      var period = $("#period").val() || "30";
+      const period = $("#period").val() || "30";
       uri += `&period=${period}`;
     }
   }
@@ -219,18 +219,18 @@ function generate_uri() {
 }
 
 function update_val(el, text) {
-  var start = el.selectionStart;
-  var end = el.selectionEnd;
+  const start = el.selectionStart;
+  const end = el.selectionEnd;
   el.value = text;
   el.setSelectionRange(start, end);
 }
 
 function update_qr() {
-  var secret = $("#secret").val();
-  var issuer = $("#issuer").val();
-  var label = $("#label").val();
-  var size = $("#size").val();
-  var uri = generate_uri();
+  const secret = $("#secret").val();
+  const issuer = $("#issuer").val();
+  const label = $("#label").val();
+  const size = $("#size").val();
+  const uri = generate_uri();
   if (uri != $("#uri").val()) {
     update_val($("#uri")[0], uri);
   }
@@ -262,7 +262,7 @@ function decode(s) {
 
 $("#uri").on("change keyup input", function() {
   // validate and parse uri
-  var r = /^otpauth:\/\/([th]otp)\/([^?]+)\?secret=([^&]+)(?:&issuer=([^&]+))?(?:&counter=(\d+))?(?:&algorithm=(SHA1|SHA256|SHA512))?(?:&digits=(6|8))?(?:&period=(\d+))?$/.exec(this.value);
+  const r = /^otpauth:\/\/([th]otp)\/([^?]+)\?secret=([^&]+)(?:&issuer=([^&]+))?(?:&counter=(\d+))?(?:&algorithm=(SHA1|SHA256|SHA512))?(?:&digits=(6|8))?(?:&period=(\d+))?$/.exec(this.value);
   if (r) {
     $("#uri").removeClass("is-invalid");
   }
@@ -274,7 +274,7 @@ $("#uri").on("change keyup input", function() {
   $("#adv_options").prop("checked", r[6] != undefined || r[7] != undefined || r[8] != undefined);
   adv_options_changed();
 
-  var uri = generate_uri();
+  const uri = generate_uri();
   if (uri == this.value) {
     // uri did not change
     return;
