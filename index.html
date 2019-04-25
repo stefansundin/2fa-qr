@@ -95,11 +95,11 @@ h2 {
     <p><input class="form-control" type="search" id="counter" placeholder="Initial counter &mdash; Defaults to 0" pattern="\d+" spellcheck="false"></p>
 
     <div class="custom-control custom-checkbox">
-      <p><input class="custom-control-input" type="checkbox" id="adv_options"><label class="custom-control-label" for="adv_options">Show advanced settings</label></p>
+      <p><input class="custom-control-input" type="checkbox" id="advanced_options"><label class="custom-control-label" for="advanced_options">Show advanced settings</label></p>
     </div>
 
-    <div id="adv_options_container">
-      <p>Please note that advanced settings are not supported by the Google Authenticator app yet: all advanced settings are ignored, and default values are used. <a href="https://www.yubico.com/products/services-software/download/yubico-authenticator/">Yubico Authenticator</a> support these advanced settings.</p>
+    <div id="advanced_options_container">
+      <p>Please note that advanced settings are not supported by the Google Authenticator app (all advanced settings are ignored). <a href="https://www.yubico.com/products/services-software/download/yubico-authenticator/">Yubico Authenticator</a> supports these advanced settings.</p>
       <p>
         <select class="form-control" id="algorithm">
           <option value="SHA1">SHA1 algorithm (Default)</option>
@@ -172,11 +172,11 @@ $("#qr").empty().qrcode({
 });
 $("link[rel=icon]").prop("href", $("#qr img").prop("src"));
 
-function adv_options_changed() {
-  $("#adv_options_container").toggle($("#adv_options").prop("checked"));
+function advanced_options_changed() {
+  $("#advanced_options_container").toggle($("#advanced_options").prop("checked"));
   $("#period").toggle($("#type").val() == "totp");
 }
-$("#adv_options").on("change keyup", adv_options_changed);
+$("#advanced_options").on("change keyup", advanced_options_changed);
 
 function type_changed() {
   const type = $("#type").val();
@@ -186,7 +186,7 @@ function type_changed() {
   else {
     $("#counter").show();
   }
-  adv_options_changed();
+  advanced_options_changed();
 }
 type_changed();
 $("#type").on("change keyup", type_changed);
@@ -196,7 +196,7 @@ function generate_uri() {
   const secret = $("#secret").val().replace(/ /g, '');
   const label = $("#label").val();
   const issuer = $("#issuer").val();
-  const adv_options = $("#adv_options").prop("checked");
+  const advanced_options = $("#advanced_options").prop("checked");
 
   let uri = `otpauth://${type}/${encodeURIComponent(label)}?secret=${secret}`;
   if (issuer != "") {
@@ -206,7 +206,7 @@ function generate_uri() {
     const counter = $("#counter").val() || "0";
     uri += `&counter=${counter}`;
   }
-  if (adv_options) {
+  if (advanced_options) {
     const algorithm = $("#algorithm").val();
     const digits = $("#digits").val();
     uri += `&algorithm=${algorithm}&digits=${digits}`;
@@ -271,8 +271,8 @@ $("#uri").on("change keyup input", function() {
     return;
   }
 
-  $("#adv_options").prop("checked", r[6] != undefined || r[7] != undefined || r[8] != undefined);
-  adv_options_changed();
+  $("#advanced_options").prop("checked", r[6] != undefined || r[7] != undefined || r[8] != undefined);
+  advanced_options_changed();
 
   const uri = generate_uri();
   if (uri == this.value) {
