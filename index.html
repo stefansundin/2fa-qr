@@ -160,6 +160,8 @@ h2 {
       <option>Yahoo!</option>
     </datalist>
 
+    <input class="form-control" type="range" id="size" value="200" min="50" max="650" title="QR Code Size">
+
     <div id="qr"></div>
 
 <script>
@@ -227,13 +229,15 @@ function update_qr() {
   var secret = $("#secret").val();
   var issuer = $("#issuer").val();
   var label = $("#label").val();
+  var size = $("#size").val();
   var uri = generate_uri();
   if (uri != $("#uri").val()) {
     update_val($("#uri")[0], uri);
   }
 
   $("#qr").empty().qrcode({
-    text: uri
+    text: uri,
+    size: size,
   });
   if (label == "" && issuer == "") {
     $("#app_label").text("Issuer (label)");
@@ -250,7 +254,7 @@ function update_qr() {
 }
 
 update_qr();
-$("select,input[type='search'],input[type='checkbox']").on("change keyup input", update_qr);
+$("select,input[type='search'],input[type='checkbox'],input[type='range']").on("change keyup input", update_qr);
 
 function decode(s) {
   return s ? decodeURIComponent(s) : undefined;
