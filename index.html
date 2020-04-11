@@ -15,7 +15,7 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:500,400">
 
   <script src="https://code.jquery.com/jquery-3.6.0.slim.min.js" integrity="sha256-u7e5khyithlIdTpu22PHhENmPcRdFiHRjhAuHcs05RI=" crossorigin="anonymous"></script>
-  <script src="https://cdn.jsdelivr.net/gh/lrsjng/jquery-qrcode@v0.18.0/dist/jquery-qrcode.min.js" integrity="sha384-W+CodFEp2EiGOM49HsUJwCpf58Vkgsx5CtgCl6bQJiAfGb+ndvp/fE8dZtI9fnUD" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/kjua@0.9.0/dist/kjua.min.js" integrity="sha256-U9OwIwkuBJSExOOc5vUNG43RAHR5XmbaBuEUB5KpHZo=" crossorigin="anonymous"></script>
 <style>
 body {
   margin-bottom: 100px;
@@ -157,17 +157,18 @@ h2 {
       <option>Yahoo!</option>
     </datalist>
 
-    <input class="form-control-range" type="range" id="size" value="200" min="50" max="650" title="QR Code Size" autocomplete="off">
+    <input class="form-control-range" type="range" id="size" value="200" min="50" max="650" step="25" title="QR Code Size" autocomplete="off">
 
-    <div class="p-4 text-center" id="qr"></div>
+    <div class="p-4 text-center" id="qr"><img></div>
 
 <script>
 // make a nice QR code as the favicon
-$("#qr").empty().qrcode({
+const el = kjua({
   render: "image",
+  crisp: false,
   text: "stefansundin"
 });
-$("link[rel=icon]").prop("href", $("#qr img").prop("src"));
+$("link[rel=icon]").prop("href", el.getAttribute("src"));
 
 function advanced_options_changed() {
   $("#advanced_options_container").toggle($("#advanced_options").prop("checked"));
@@ -232,10 +233,12 @@ function update_qr() {
     update_val($("#uri")[0], uri);
   }
 
-  $("#qr").empty().qrcode({
+  const el = kjua({
     text: uri,
     size: size,
   });
+  const qr = document.getElementById("qr");
+  qr.replaceChild(el, qr.firstChild);
   if (label == "" && issuer == "") {
     $("#app_label").text("Issuer (label)");
   }
