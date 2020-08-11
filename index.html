@@ -266,8 +266,11 @@ function decode(s) {
 
 $("#uri").on("change keyup input", function() {
   // validate and parse uri
-  const r = /^otpauth:\/\/([th]otp)\/([^?]+)\?secret=([^&]+)(?:&issuer=([^&]+))?(?:&counter=(\d+))?(?:&algorithm=(SHA1|SHA256|SHA512))?(?:&digits=(6|8))?(?:&period=(\d+))?$/.exec(this.value);
-  if (r) {
+  const url = new URL(this.value);
+  if (url.protocol == "otpauth:"
+   && (url.pathname.startsWith("//totp/") || url.pathname.startsWith("//hotp/"))
+   && url.searchParams.has("secret")
+  ) {
     $("#uri").removeClass("is-invalid");
   }
   else {
@@ -275,7 +278,7 @@ $("#uri").on("change keyup input", function() {
     return;
   }
 
-  $("#advanced_options").prop("checked", r[6] != undefined || r[7] != undefined || r[8] != undefined);
+  $("#advanced_options").prop("checked", url.searchParams.has("algorithm") || url.searchParams.has("digits") || url.searchParams.has("period"));
   advanced_options_changed();
 
   const uri = generate_uri();
@@ -285,14 +288,15 @@ $("#uri").on("change keyup input", function() {
   }
 
   // update fields and generate a new QR code
-  $("#type").val(r[1]);
-  $("#label").val(decode(r[2]));
-  $("#secret").val(r[3]);
-  $("#issuer").val(decode(r[4]));
-  $("#counter").val(r[5] == "0" ? "": r[5]);
-  $("#algorithm").val(r[6] || "SHA1");
-  $("#digits").val(r[7] || "6");
-  $("#period").val(r[8] == "30" ? "": r[8]);
+  $("#type").val(url.pathname.substr(2, 4));
+  $("#label").val(decode(url.pathname.substr(7)));
+  $("#secret").val(url.searchParams.get("secret"));
+  $("#issuer").val(decode(url.searchParams.get("issuer")));
+  const counter = url.searchParams.get("counter") || "";
+  $("#counter").val(counter == "0" ? "": counter);
+  $("#algorithm").val(url.searchParams.get("algorithm") || "SHA1");
+  $("#digits").val(url.searchParams.get("digits") || "6");
+  $("#period").val(url.searchParams.get("period") == "30" ? "": url.searchParams.get("period"));
   type_changed();
   update_qr();
 });
