@@ -230,7 +230,7 @@ function update_val(el, text) {
 }
 
 function update_qr() {
-  const secret = $("#secret").val();
+  const secret = $("#secret").val().replace(/ /g, '');
   const issuer = $("#issuer").val();
   const label = $("#label").val();
   const size = $("#size").val();
