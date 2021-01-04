@@ -202,9 +202,11 @@ function generate_uri() {
   const issuer = $("#issuer").val();
   const advanced_options = $("#advanced_options").prop("checked");
 
-  let uri = `otpauth://${type}/${encodeURIComponent(label)}?secret=${secret}`;
+  let uri = `otpauth://${type}/`;
   if (issuer != "") {
-    uri += `&issuer=${encodeURIComponent(issuer)}`;
+    uri += `${encodeURIComponent(issuer)}:${encodeURIComponent(label)}?secret=${secret}&issuer=${encodeURIComponent(issuer)}`;
+  }else{
+    uri += `${encodeURIComponent(label)}?secret=${secret}`;
   }
   if (type == "hotp") {
     const counter = $("#counter").val() || "0";
