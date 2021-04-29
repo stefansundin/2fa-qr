@@ -17,7 +17,6 @@
   <script src="https://cdn.jsdelivr.net/gh/lrsjng/jquery-qrcode@v0.18.0/dist/jquery-qrcode.min.js" integrity="sha384-W+CodFEp2EiGOM49HsUJwCpf58Vkgsx5CtgCl6bQJiAfGb+ndvp/fE8dZtI9fnUD" crossorigin="anonymous"></script>
 <style>
 body {
-  padding: 0 15px;
   margin-bottom: 100px;
 }
 @media (min-width: 768px) {
@@ -27,16 +26,13 @@ body {
 }
 
 header {
-  margin-top: 25px;
   text-align: center;
 }
 h1 {
   font-size: 4em;
   font-weight: 700;
-  margin-bottom: 0.5em;
 }
 h2 {
-  margin-top: 1em;
   font-size: 1.5em;
   font-weight: 400;
 }
@@ -49,7 +45,6 @@ h2 {
 }
 
 #qr {
-  padding: 25px;
   text-align: center;
 }
 #app {
@@ -70,7 +65,7 @@ h2 {
 </style>
 </head>
 <body>
-  <header>
+  <header class="mt-4">
     <h1 itemprop="name">2FA QR code generator</h1>
     <h2 itemprop="description">Save your 2FA secrets, then use this to scan them again.</h2>
   </header>
@@ -166,7 +161,7 @@ h2 {
 
     <input class="form-control-range" type="range" id="size" value="200" min="50" max="650" title="QR Code Size" autocomplete="off">
 
-    <div id="qr"></div>
+    <div class="p-4" id="qr"></div>
 
 <script>
 // make a nice QR code as the favicon
