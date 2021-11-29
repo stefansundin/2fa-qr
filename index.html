@@ -85,13 +85,13 @@ h2 {
     <p><input class="form-control" type="search" id="secret" placeholder="Secret &mdash; Required" autocomplete="off" spellcheck="false"></p>
     <p><input class="form-control" type="search" id="label" placeholder="Label &mdash; Required" autocomplete="off" spellcheck="false"></p>
     <p><input class="form-control" type="search" id="issuer" placeholder="Issuer &mdash; Optional" list="issuers" spellcheck="false"></p>
-    <p><input class="form-control" type="search" id="counter" placeholder="Initial counter &mdash; Defaults to 0" pattern="\d+" autocomplete="off" spellcheck="false"></p>
+    <p><input class="form-control d-none" type="search" id="counter" placeholder="Initial counter &mdash; Defaults to 0" pattern="\d+" autocomplete="off" spellcheck="false"></p>
 
     <div class="custom-control custom-checkbox">
       <p><input class="custom-control-input" type="checkbox" id="advanced_options" autocomplete="off"><label class="custom-control-label" for="advanced_options">Advanced options</label></p>
     </div>
 
-    <div id="advanced_options_container">
+    <div class="d-none" id="advanced_options_container">
       <p>Please note that the advanced options are not supported by the Google Authenticator app (all advanced options are ignored). Yubico Authenticator supports these advanced options.</p>
       <p>
         <select class="form-control" id="algorithm" autocomplete="off">
@@ -181,153 +181,154 @@ h2 {
     <ul>
       <li>Made by <a href="https://stefansundin.github.io/">Stefan Sundin</a>.</li>
       <li>Get <a href="https://github.com/stefansundin/2fa-qr">the source code</a>.</li>
-      <li>Uses <a href="https://larsjung.de/jquery-qrcode/">jquery-qrcode</a>.</li>
+      <li>Uses <a href="https://larsjung.de/jquery-qrcode/">jquery-qrcode</a> and <a href="https://github.com/stefansundin/qr-detector.js">QrDetector</a>.</li>
       <li>See <a href="https://github.com/google/google-authenticator/wiki/Key-Uri-Format">the docs</a> for the URI format.</li>
     </ul>
   </div>
 
 <script>
-// make a nice QR code as the favicon
+// generate a nice QR code for the favicon
 $("#qr").empty().qrcode({
   render: "image",
   text: "stefansundin"
 });
-$("link[rel=icon]").prop("href", $("#qr img").prop("src"));
+document.querySelector("link[rel=icon]").href = $("#qr img").prop("src");
 
-function type_changed() {
-  const type = $("#type").val();
-  if (type === "totp") {
-    $("#counter").hide();
-  }
-  else {
-    $("#counter").show();
-  }
-  $("#period").toggle(type === "totp");
+const container = document.getElementById("container");
+const type = document.getElementById("type");
+const secret = document.getElementById("secret");
+const label = document.getElementById("label");
+const issuer = document.getElementById("issuer");
+const counter = document.getElementById("counter");
+const advanced_options = document.getElementById("advanced_options");
+const advanced_options_container = document.getElementById("advanced_options_container");
+const algorithm = document.getElementById("algorithm");
+const digits = document.getElementById("digits");
+const period = document.getElementById("period");
+const uri = document.getElementById("uri");
+const app_label = document.getElementById("app_label");
+
+function type_changed(e) {
+  counter.classList.toggle("d-none", type.value !== "hotp");
+  period.classList.toggle("d-none", type.value !== "totp");
 }
-$("#type").on("input", type_changed).trigger("input");
 
 function advanced_options_changed() {
-  $("#advanced_options_container").toggle($("#advanced_options").prop("checked"));
+  advanced_options_container.classList.toggle("d-none", !advanced_options.checked);
 }
-$("#advanced_options").on("input", advanced_options_changed).trigger("input");
 
 function generate_uri() {
-  const type = $("#type").val();
-  const secret = $("#secret").val().replace(/ /g, '');
-  const label = $("#label").val();
-  const issuer = $("#issuer").val();
-  const advanced_options = $("#advanced_options").prop("checked");
-
-  let uri = `otpauth://${type}/${encodeURIComponent(label)}?secret=${secret}`;
-  if (issuer !== "") {
-    uri += `&issuer=${encodeURIComponent(issuer)}`;
+  let s = `otpauth://${type.value}/${encodeURIComponent(label.value)}?secret=${secret.value.replace(/ /g, '')}`;
+  if (issuer.value !== "") {
+    s += `&issuer=${encodeURIComponent(issuer.value)}`;
   }
-  if (type === "hotp") {
-    const counter = $("#counter").val() || "0";
-    uri += `&counter=${counter}`;
+  if (type.value === "hotp") {
+    s += `&counter=${counter.value || "0"}`;
   }
-  if (advanced_options) {
-    const algorithm = $("#algorithm").val();
-    const digits = $("#digits").val();
-    uri += `&algorithm=${algorithm}&digits=${digits}`;
-    if (type === "totp") {
-      const period = $("#period").val() || "30";
-      uri += `&period=${period}`;
+  if (advanced_options.checked) {
+    s += `&algorithm=${algorithm.value}&digits=${digits.value}`;
+    if (type.value === "totp") {
+      s += `&period=${period.value || "30"}`;
     }
   }
-  return uri;
+  return s;
 }
 
 function update_uri() {
-  const secret = $("#secret").val().replace(/ /g, '');
-  const issuer = $("#issuer").val();
-  const label = $("#label").val();
-  const uri = generate_uri();
-  if (uri !== $("#uri").val()) {
-    $("#uri").val(uri);
-    update_qr();
+  const s = generate_uri();
+  if (s === uri.value) {
+    return;
   }
 
-  if (label === "" && issuer === "") {
-    $("#app_label").text("Issuer (label)");
-  }
-  else {
-    $("#app_label").text(issuer === "" ? label : `${issuer} (${label})`);
-  }
+  uri.value = s;
+  update_qr();
 
-  // remove error on uri field
-  $("#uri").removeClass("is-invalid");
-  // mark empty required input fields
-  $("#secret").toggleClass("is-invalid", secret === "");
-  $("#label").toggleClass("is-invalid", label === "");
+  uri.classList.remove("is-invalid");
+  secret.classList.toggle("is-invalid", secret.value === "");
+  label.classList.toggle("is-invalid", label.value === "");
 }
 
 function update_qr() {
   $("#qr").empty().qrcode({
-    text: $("#uri").val(),
-    size: $("#size").val(),
+    text: uri.value,
+    size: size.value,
   });
-}
 
-update_uri();
-$("select,input[type='search'],input[type='checkbox']").on("input", update_uri);
-$("input[type='range']").on("input", update_qr);
-
-function on_resize() {
-  const container = document.getElementById("container");
-  const size = $("#size")[0];
-  const oldvalue = size.value;
-  size.max = Math.min(650, container.clientWidth - 2*(24+15));
-  if (size.value !== oldvalue) {
-    $("#size").trigger("input");
+  if (label.value === "" && issuer.value === "") {
+    app_label.textContent = "Issuer (label)";
+  }
+  else {
+    app_label.textContent = issuer.value === "" ? label.value : `${issuer.value} (${label.value})`;
   }
 }
-on_resize();
-window.addEventListener("resize", on_resize);
 
 function decode(s) {
-  return s ? decodeURIComponent(s) : undefined;
+  return s ? decodeURIComponent(s) : "";
 }
 
-$("#uri").on("input", function() {
+function parse_uri() {
   // update the QR code
   update_qr();
 
-  // validate and parse uri
-  const url = new URL(this.value);
+  // validate and parse the uri
+  const url = new URL(uri.value);
   if (url.protocol === "otpauth:"
    && (url.pathname.startsWith("//totp/") || url.pathname.startsWith("//hotp/"))
    && url.searchParams.has("secret")
   ) {
-    $("#uri").removeClass("is-invalid");
+    uri.classList.remove("is-invalid");
   }
   else {
-    $("#uri").addClass("is-invalid");
+    uri.classList.add("is-invalid");
     return;
   }
 
-  const uri = generate_uri();
-  if (uri === this.value) {
-    // uri did not change
+  const s = generate_uri();
+  if (s === uri.value) {
+    // the uri did not change
     return;
   }
 
   // update fields
-  $("#type").val(url.pathname.substr(2, 4));
-  $("#label").val(decode(url.pathname.substr(7)));
-  $("#secret").val(url.searchParams.get("secret"));
-  $("#issuer").val(decode(url.searchParams.get("issuer")));
-  const counter = url.searchParams.get("counter") || "";
-  $("#counter").val(counter === "0" ? "": counter);
-  $("#advanced_options").prop("checked", url.searchParams.has("algorithm") || url.searchParams.has("digits") || url.searchParams.has("period"));
-  $("#algorithm").val(url.searchParams.get("algorithm") || "SHA1");
-  $("#digits").val(url.searchParams.get("digits") || "6");
-  $("#period").val(url.searchParams.get("period") === "30" ? "": url.searchParams.get("period"));
-  $("#secret").toggleClass("is-invalid", $("#secret").val() === "");
-  $("#label").toggleClass("is-invalid", $("#label").val() === "");
+  const c = url.searchParams.get("counter") || "";
+
+  type.value = url.pathname.substr(2, 4);
+  label.value = decode(url.pathname.substr(7));
+  secret.value = url.searchParams.get("secret");
+  issuer.value = decode(url.searchParams.get("issuer"));
+  counter.value = c === "0" ? "": c;
+  advanced_options.checked = url.searchParams.has("algorithm") || url.searchParams.has("digits") || url.searchParams.has("period");
+  algorithm.value = url.searchParams.get("algorithm") || "SHA1";
+  digits.value = url.searchParams.get("digits") || "6";
+  period.value = url.searchParams.get("period") === "30" ? "": url.searchParams.get("period");
+
+  secret.classList.toggle("is-invalid", secret.value === "");
+  label.classList.toggle("is-invalid", label.value === "");
+
   type_changed();
   advanced_options_changed();
-});
+}
+
+function resize() {
+  const old_value = size.value;
+  size.max = Math.min(650, container.clientWidth - 2*(24+15));
+  if (size.value !== old_value) {
+    update_qr();
+  }
+}
+
+[
+  type, secret, label, issuer, counter,
+  advanced_options, algorithm, digits, period,
+].forEach(el => el.addEventListener("input", update_uri));
+type.addEventListener("input", type_changed);
+advanced_options.addEventListener("input", advanced_options_changed);
+uri.addEventListener("input", parse_uri);
+size.addEventListener("input", update_qr);
+window.addEventListener("resize", resize);
+
+resize();
+update_uri();
 </script>
 </body>
 </html>
