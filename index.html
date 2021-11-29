@@ -175,12 +175,6 @@ $("#qr").empty().qrcode({
 });
 $("link[rel=icon]").prop("href", $("#qr img").prop("src"));
 
-function advanced_options_changed() {
-  $("#advanced_options_container").toggle($("#advanced_options").prop("checked"));
-  $("#period").toggle($("#type").val() == "totp");
-}
-$("#advanced_options").on("change keyup", advanced_options_changed);
-
 function type_changed() {
   const type = $("#type").val();
   if (type == "totp") {
@@ -189,10 +183,14 @@ function type_changed() {
   else {
     $("#counter").show();
   }
-  advanced_options_changed();
+  $("#period").toggle(type == "totp");
 }
-type_changed();
-$("#type").on("change keyup", type_changed);
+$("#type").on("input", type_changed).trigger("input");
+
+function advanced_options_changed() {
+  $("#advanced_options_container").toggle($("#advanced_options").prop("checked"));
+}
+$("#advanced_options").on("input", advanced_options_changed).trigger("input");
 
 function generate_uri() {
   const type = $("#type").val();
@@ -221,27 +219,16 @@ function generate_uri() {
   return uri;
 }
 
-function update_val(el, text) {
-  const start = el.selectionStart;
-  const end = el.selectionEnd;
-  el.value = text;
-  el.setSelectionRange(start, end);
-}
-
-function update_qr() {
+function update_uri() {
   const secret = $("#secret").val().replace(/ /g, '');
   const issuer = $("#issuer").val();
   const label = $("#label").val();
-  const size = $("#size").val();
   const uri = generate_uri();
   if (uri != $("#uri").val()) {
-    update_val($("#uri")[0], uri);
+    $("#uri").val(uri);
+    update_qr();
   }
 
-  $("#qr").empty().qrcode({
-    text: uri,
-    size: size,
-  });
   if (label == "" && issuer == "") {
     $("#app_label").text("Issuer (label)");
   }
@@ -256,14 +243,25 @@ function update_qr() {
   $("#label").toggleClass("is-invalid", label == "");
 }
 
-update_qr();
-$("select,input[type='search'],input[type='checkbox'],input[type='range']").on("change keyup input", update_qr);
+function update_qr() {
+  $("#qr").empty().qrcode({
+    text: $("#uri").val(),
+    size: $("#size").val(),
+  });
+}
+
+update_uri();
+$("select,input[type='search'],input[type='checkbox']").on("input", update_uri);
+$("input[type='range']").on("input", update_qr);
 
 function decode(s) {
   return s ? decodeURIComponent(s) : undefined;
 }
 
-$("#uri").on("change keyup input", function() {
+$("#uri").on("input", function() {
+  // update the QR code
+  update_qr();
+
   // validate and parse uri
   const url = new URL(this.value);
   if (url.protocol == "otpauth:"
@@ -277,27 +275,27 @@ $("#uri").on("change keyup input", function() {
     return;
   }
 
-  $("#advanced_options").prop("checked", url.searchParams.has("algorithm") || url.searchParams.has("digits") || url.searchParams.has("period"));
-  advanced_options_changed();
-
   const uri = generate_uri();
   if (uri == this.value) {
     // uri did not change
     return;
   }
 
-  // update fields and generate a new QR code
+  // update fields
   $("#type").val(url.pathname.substr(2, 4));
   $("#label").val(decode(url.pathname.substr(7)));
   $("#secret").val(url.searchParams.get("secret"));
   $("#issuer").val(decode(url.searchParams.get("issuer")));
   const counter = url.searchParams.get("counter") || "";
   $("#counter").val(counter == "0" ? "": counter);
+  $("#advanced_options").prop("checked", url.searchParams.has("algorithm") || url.searchParams.has("digits") || url.searchParams.has("period"));
   $("#algorithm").val(url.searchParams.get("algorithm") || "SHA1");
   $("#digits").val(url.searchParams.get("digits") || "6");
   $("#period").val(url.searchParams.get("period") == "30" ? "": url.searchParams.get("period"));
+  $("#secret").toggleClass("is-invalid", $("#secret").val() == "");
+  $("#label").toggleClass("is-invalid", $("#label").val() == "");
   type_changed();
-  update_qr();
+  advanced_options_changed();
 });
 </script>
 
