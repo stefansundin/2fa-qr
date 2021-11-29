@@ -177,13 +177,13 @@ $("link[rel=icon]").prop("href", $("#qr img").prop("src"));
 
 function type_changed() {
   const type = $("#type").val();
-  if (type == "totp") {
+  if (type === "totp") {
     $("#counter").hide();
   }
   else {
     $("#counter").show();
   }
-  $("#period").toggle(type == "totp");
+  $("#period").toggle(type === "totp");
 }
 $("#type").on("input", type_changed).trigger("input");
 
@@ -200,10 +200,10 @@ function generate_uri() {
   const advanced_options = $("#advanced_options").prop("checked");
 
   let uri = `otpauth://${type}/${encodeURIComponent(label)}?secret=${secret}`;
-  if (issuer != "") {
+  if (issuer !== "") {
     uri += `&issuer=${encodeURIComponent(issuer)}`;
   }
-  if (type == "hotp") {
+  if (type === "hotp") {
     const counter = $("#counter").val() || "0";
     uri += `&counter=${counter}`;
   }
@@ -211,7 +211,7 @@ function generate_uri() {
     const algorithm = $("#algorithm").val();
     const digits = $("#digits").val();
     uri += `&algorithm=${algorithm}&digits=${digits}`;
-    if (type == "totp") {
+    if (type === "totp") {
       const period = $("#period").val() || "30";
       uri += `&period=${period}`;
     }
@@ -224,23 +224,23 @@ function update_uri() {
   const issuer = $("#issuer").val();
   const label = $("#label").val();
   const uri = generate_uri();
-  if (uri != $("#uri").val()) {
+  if (uri !== $("#uri").val()) {
     $("#uri").val(uri);
     update_qr();
   }
 
-  if (label == "" && issuer == "") {
+  if (label === "" && issuer === "") {
     $("#app_label").text("Issuer (label)");
   }
   else {
-    $("#app_label").text(issuer == "" ? label : `${issuer} (${label})`);
+    $("#app_label").text(issuer === "" ? label : `${issuer} (${label})`);
   }
 
   // remove error on uri field
   $("#uri").removeClass("is-invalid");
   // mark empty required input fields
-  $("#secret").toggleClass("is-invalid", secret == "");
-  $("#label").toggleClass("is-invalid", label == "");
+  $("#secret").toggleClass("is-invalid", secret === "");
+  $("#label").toggleClass("is-invalid", label === "");
 }
 
 function update_qr() {
@@ -259,7 +259,7 @@ function on_resize() {
   const size = $("#size")[0];
   const oldvalue = size.value;
   size.max = Math.min(650, container.clientWidth - 2*(24+15));
-  if (size.value != oldvalue) {
+  if (size.value !== oldvalue) {
     $("#size").trigger("input");
   }
 }
@@ -276,7 +276,7 @@ $("#uri").on("input", function() {
 
   // validate and parse uri
   const url = new URL(this.value);
-  if (url.protocol == "otpauth:"
+  if (url.protocol === "otpauth:"
    && (url.pathname.startsWith("//totp/") || url.pathname.startsWith("//hotp/"))
    && url.searchParams.has("secret")
   ) {
@@ -288,7 +288,7 @@ $("#uri").on("input", function() {
   }
 
   const uri = generate_uri();
-  if (uri == this.value) {
+  if (uri === this.value) {
     // uri did not change
     return;
   }
@@ -299,13 +299,13 @@ $("#uri").on("input", function() {
   $("#secret").val(url.searchParams.get("secret"));
   $("#issuer").val(decode(url.searchParams.get("issuer")));
   const counter = url.searchParams.get("counter") || "";
-  $("#counter").val(counter == "0" ? "": counter);
+  $("#counter").val(counter === "0" ? "": counter);
   $("#advanced_options").prop("checked", url.searchParams.has("algorithm") || url.searchParams.has("digits") || url.searchParams.has("period"));
   $("#algorithm").val(url.searchParams.get("algorithm") || "SHA1");
   $("#digits").val(url.searchParams.get("digits") || "6");
-  $("#period").val(url.searchParams.get("period") == "30" ? "": url.searchParams.get("period"));
-  $("#secret").toggleClass("is-invalid", $("#secret").val() == "");
-  $("#label").toggleClass("is-invalid", $("#label").val() == "");
+  $("#period").val(url.searchParams.get("period") === "30" ? "": url.searchParams.get("period"));
+  $("#secret").toggleClass("is-invalid", $("#secret").val() === "");
+  $("#label").toggleClass("is-invalid", $("#label").val() === "");
   type_changed();
   advanced_options_changed();
 });
