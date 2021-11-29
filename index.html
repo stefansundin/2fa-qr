@@ -167,6 +167,25 @@ h2 {
 
     <div class="p-4 text-center" id="qr"></div>
 
+    <hr>
+
+    <p>In the Google Authenticator app, it will look something like this:</p>
+
+    <div id="app">
+      <div id="app_code">123 456</div>
+      <div id="app_label">Issuer (label)</div>
+    </div>
+
+    <hr>
+
+    <ul>
+      <li>Made by <a href="https://stefansundin.github.io/">Stefan Sundin</a>.</li>
+      <li>Get <a href="https://github.com/stefansundin/2fa-qr">the source code</a>.</li>
+      <li>Uses <a href="https://larsjung.de/jquery-qrcode/">jquery-qrcode</a>.</li>
+      <li>See <a href="https://github.com/google/google-authenticator/wiki/Key-Uri-Format">the docs</a> for the URI format.</li>
+    </ul>
+  </div>
+
 <script>
 // make a nice QR code as the favicon
 $("#qr").empty().qrcode({
@@ -310,24 +329,5 @@ $("#uri").on("input", function() {
   advanced_options_changed();
 });
 </script>
-
-    <hr>
-
-    <p>In the Google Authenticator app, it will look something like this:</p>
-
-    <div id="app">
-      <div id="app_code">123 456</div>
-      <div id="app_label">Issuer (label)</div>
-    </div>
-
-    <hr>
-
-    <ul>
-      <li>Made by <a href="https://stefansundin.github.io/">Stefan Sundin</a>.</li>
-      <li>Get <a href="https://github.com/stefansundin/2fa-qr">the source code</a>.</li>
-      <li>Uses <a href="https://larsjung.de/jquery-qrcode/">jquery-qrcode</a>.</li>
-      <li>See <a href="https://github.com/google/google-authenticator/wiki/Key-Uri-Format">the docs</a> for the URI format.</li>
-    </ul>
-  </div>
 </body>
 </html>
