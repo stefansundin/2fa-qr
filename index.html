@@ -68,7 +68,7 @@ h2 {
     <h2 itemprop="description">Save your 2FA secrets, then use this to scan them again.</h2>
   </header>
 
-  <div class="container">
+  <div id="container" class="container">
     <hr>
 
     <p>This is a 2FA QR code generator made in JavaScript that helps you make QR codes from 2FA secrets.</p>
@@ -253,6 +253,18 @@ function update_qr() {
 update_uri();
 $("select,input[type='search'],input[type='checkbox']").on("input", update_uri);
 $("input[type='range']").on("input", update_qr);
+
+function on_resize() {
+  const container = document.getElementById("container");
+  const size = $("#size")[0];
+  const oldvalue = size.value;
+  size.max = Math.min(650, container.clientWidth - 2*(24+15));
+  if (size.value != oldvalue) {
+    $("#size").trigger("input");
+  }
+}
+on_resize();
+window.addEventListener("resize", on_resize);
 
 function decode(s) {
   return s ? decodeURIComponent(s) : undefined;
