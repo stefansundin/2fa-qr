@@ -425,13 +425,12 @@ function close_modal(element) {
   document.body.classList.remove('modal-open');
 }
 
-const qr_detector_url = 'https://cdn.jsdelivr.net/gh/stefansundin/qr-detector.js@v0.0.3/dist/QrDetector.min.js';
-open_qrdetector.addEventListener('click', () => {
+open_qrdetector.addEventListener('click', async () => {
   qrdetector_status.textContent = 'Waiting for image..';
   qrdetector_status.className = 'alert alert-info';
   open_modal(qrdetector_modal);
 
-  if (document.head.querySelector(`script[src="${qr_detector_url}"]`)) {
+  if (window.QrDetector) {
     return;
   }
 
@@ -456,11 +455,7 @@ open_qrdetector.addEventListener('click', () => {
     }
   });
 
-  const script = document.createElement('script');
-  script.src = qr_detector_url;
-  script.integrity = 'sha384-l4Z50lrPxRBklWjkWnICpN/hC5KItIVMjzw97nhqNerGyMx7pWowoWKUU0tuUPJS';
-  script.crossOrigin = 'anonymous';
-  script.addEventListener('load', () => {
+  function qrdetector_ready() {
     qrdetector_body_loading.classList.add('d-none');
     qrdetector_body.classList.remove('d-none');
 
@@ -670,7 +665,22 @@ open_qrdetector.addEventListener('click', () => {
         }
       }
     });
-  });
+  }
+
+  if (window.BarcodeDetector) {
+    const supportedFormats = await BarcodeDetector.getSupportedFormats();
+    if (supportedFormats.includes('qr_code')) {
+      window.QrDetector = BarcodeDetector;
+      qrdetector_ready();
+      return;
+    }
+  }
+
+  const script = document.createElement('script');
+  script.src = 'https://cdn.jsdelivr.net/gh/stefansundin/qr-detector.js@v0.0.3/dist/QrDetector.min.js';
+  script.integrity = 'sha384-l4Z50lrPxRBklWjkWnICpN/hC5KItIVMjzw97nhqNerGyMx7pWowoWKUU0tuUPJS';
+  script.crossOrigin = 'anonymous';
+  script.addEventListener('load', qrdetector_ready);
   script.addEventListener('error', () => {
     qrdetector_loading.textContent = 'An error occurred while loading the QR detection library. Please check the browser console for errors.';
     qrdetector_loading.className = 'alert alert-danger';
