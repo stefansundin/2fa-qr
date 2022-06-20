@@ -1,15 +1,16 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <title>2FA QR code generator</title>
+  <title>2FA QR Code Generator</title>
 
   <meta charset="utf-8">
   <meta name="author" content="Stefan Sundin">
-  <meta name="description" content="2FA QR code generator">
+  <meta name="description" content="2FA QR Code Generator">
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src data:">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; manifest-src 'self'; worker-src 'self'">
 
   <link rel="icon">
+  <link rel="manifest" href="app.webmanifest">
   <link rel="license" href="https://www.gnu.org/licenses/gpl-3.0.html" title="GNU GPL 3.0 or later">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.1/dist/css/bootstrap.min.css" integrity="sha384-zCbKRCUGaJDkqS1kPbPd7TveP5iyJE0EjAuZQTgFLD2ylzuqKfdKlfG/eSrtxUkn" crossorigin="anonymous">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:500,400">
@@ -83,14 +84,14 @@ body.modal-open #qr {
 </head>
 <body>
   <header class="mt-4">
-    <h1 itemprop="name">2FA QR code generator</h1>
+    <h1 itemprop="name">2FA QR Code Generator</h1>
     <h2 itemprop="description">Save your 2FA secrets, then use this to scan them again.</h2>
   </header>
 
   <div id="container" class="container">
     <hr>
 
-    <p>This is a 2FA QR code generator made in JavaScript that helps you make QR codes from 2FA secrets. Most websites give you both a QR code and an option to manually type the secret. If you need to decode a QR code to obtain the secret, <a data-bs-toggle="modal" data-bs-target="#qrdetector_modal" id="open_qrdetector">click here</a>.</p>
+    <p>This is a 2FA QR code generator made in JavaScript that helps you make QR codes from 2FA secrets. Most websites give you both a QR code and an option to manually type the secret. If you need to decode a QR code to obtain the secret, <a data-bs-toggle="modal" data-bs-target="#qrdetector_modal" id="open_qrdetector">click here</a>. To use this app offline, <a data-bs-toggle="modal" data-bs-target="#service_worker_modal">click here</a>.</p>
 
     <noscript>
       <div class="alert alert-danger text-center font-weight-bold" role="alert">
@@ -131,6 +132,28 @@ body.modal-open #qr {
         </div>
       </div>
     </div>
+
+    <div class="modal" id="service_worker_modal" tabindex="-1" role="dialog" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Offline</h5>
+          </div>
+          <div class="modal-body">
+            <p>Installing a service worker makes this page available offline. You can also add the page to your home screen <a href="https://caniuse.com/web-app-manifest">on certain platforms</a>.</p>
+            <button class="btn btn-primary mb-2 mr-2" id="install_service_worker" autocomplete="off" disabled>Install service worker</button>
+            <button class="btn btn-primary mb-2 mr-2" id="a2hs" autocomplete="off" disabled>Add to home screen</button>
+            <div class="alert alert-danger" role="alert" id="service_worker_alert">
+              Service workers are not supported by your web browser.
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div class="modal-backdrop show d-none" id="modal_backdrop"></div>
 
     <hr>
@@ -707,6 +730,48 @@ open_qrdetector.addEventListener('click', async () => {
     qrdetector_loading.className = 'alert alert-danger';
   });
   document.head.appendChild(script);
+});
+
+if (navigator.serviceWorker && document.location.protocol === 'https:') {
+  const service_worker_alert = document.getElementById('service_worker_alert');
+  service_worker_alert.classList.add('d-none');
+
+  const install_service_worker = document.getElementById('install_service_worker');
+  install_service_worker.disabled = false;
+
+  async function refresh_service_worker_info() {
+    const all_registrations = await navigator.serviceWorker.getRegistrations();
+    const installed = all_registrations.some(r => window.location.href.startsWith(r.scope));
+    install_service_worker.textContent = `${installed ? 'Uninstall' : 'Install'} service worker`;
+  }
+  refresh_service_worker_info();
+
+  install_service_worker.addEventListener('click', async e => {
+    e.preventDefault();
+    const all_registrations = await navigator.serviceWorker.getRegistrations();
+    const registrations = all_registrations.filter(r => window.location.href.startsWith(r.scope));
+    if (registrations.length > 0) {
+      for (const registration of registrations) {
+        await registration.unregister();
+      }
+      await caches.delete('2fa-qr');
+    } else {
+      await navigator.serviceWorker.register('sw.js');
+    }
+    refresh_service_worker_info();
+  });
+}
+
+let deferred_prompt;
+const btn_a2hs = document.getElementById('a2hs');
+btn_a2hs.addEventListener('click', () => {
+  btn_a2hs.disabled = true;
+  deferred_prompt.prompt();
+});
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferred_prompt = e;
+  btn_a2hs.disabled = false;
 });
 </script>
 </body>
