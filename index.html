@@ -40,12 +40,12 @@ input:invalid {
   border-color: #dc3545;
 }
 
-#open_qrdetector {
-  color: #007bff;
+a[data-bs-toggle="modal"] {
+  color: #007bff !important;
   cursor: pointer;
 }
-#open_qrdetector:hover {
-  text-decoration: underline;
+a[data-bs-toggle="modal"]:hover {
+  text-decoration: underline !important;
 }
 .modal.show {
   display: block;
@@ -90,7 +90,7 @@ body.modal-open #qr {
   <div id="container" class="container">
     <hr>
 
-    <p>This is a 2FA QR code generator made in JavaScript that helps you make QR codes from 2FA secrets. Most websites give you both a QR code and an option to manually type the secret. If you need to decode a QR code to obtain the secret, <a id="open_qrdetector">click here</a>.</p>
+    <p>This is a 2FA QR code generator made in JavaScript that helps you make QR codes from 2FA secrets. Most websites give you both a QR code and an option to manually type the secret. If you need to decode a QR code to obtain the secret, <a data-bs-toggle="modal" data-bs-target="#qrdetector_modal" id="open_qrdetector">click here</a>.</p>
 
     <noscript>
       <div class="alert alert-danger text-center font-weight-bold" role="alert">
@@ -126,7 +126,7 @@ body.modal-open #qr {
             <div class="alert alert-info" role="alert" id="qrdetector_status"></div>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-dismiss="modal" id="btn_close_modal">Close</button>
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="btn_close_modal">Close</button>
           </div>
         </div>
       </div>
@@ -425,10 +425,40 @@ function close_modal(element) {
   document.body.classList.remove('modal-open');
 }
 
+for (const btn of document.querySelectorAll('[data-bs-toggle="modal"]')) {
+  btn.addEventListener('click', function() {
+    open_modal(document.querySelector(this.dataset.bsTarget));
+  });
+}
+
+for (const btn of document.querySelectorAll('[data-bs-dismiss="modal"]')) {
+  btn.addEventListener('click', function() {
+    let element = this;
+    while (element = element.parentElement) {
+      if (element.classList.contains('modal')) {
+        close_modal(element);
+        break;
+      }
+    }
+  });
+}
+
+for (const modal of document.querySelectorAll('.modal')) {
+  modal.addEventListener('click', function(e) {
+    if (e.target === this) {
+      const btn = this.querySelector('[data-bs-dismiss="modal"]');
+      if (btn) {
+        btn.click();
+      } else {
+        close_modal(this);
+      }
+    }
+  });
+}
+
 open_qrdetector.addEventListener('click', async () => {
   qrdetector_status.textContent = 'Waiting for image..';
   qrdetector_status.className = 'alert alert-info';
-  open_modal(qrdetector_modal);
 
   if (window.QrDetector) {
     return;
@@ -444,16 +474,7 @@ open_qrdetector.addEventListener('click', async () => {
     qrdetector_video.srcObject = null;
   }
 
-  btn_close_modal.addEventListener('click', () => {
-    close_modal(qrdetector_modal);
-    stop_video();
-  });
-
-  qrdetector_modal.addEventListener('click', e => {
-    if (e.target === qrdetector_modal) {
-      btn_close_modal.click();
-    }
-  });
+  btn_close_modal.addEventListener('click', () => stop_video());
 
   function qrdetector_ready() {
     qrdetector_body_loading.classList.add('d-none');
