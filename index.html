@@ -40,6 +40,23 @@ input:invalid {
   border-color: #dc3545;
 }
 
+#open_qrdetector {
+  color: #007bff;
+  cursor: pointer;
+}
+#open_qrdetector:hover {
+  text-decoration: underline;
+}
+.modal.show {
+  display: block;
+}
+body.modal-open #qr {
+  visibility: hidden;
+}
+#qrdetector_video {
+  max-width: 75%;
+}
+
 #uri {
   color: gray;
 }
@@ -62,22 +79,6 @@ input:invalid {
 #app_label {
   color: #757575;
 }
-
-#lightbox {
-  position: fixed;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  left: 0;
-  background-color: rgba(50, 50, 50, 0.5);
-  z-index: 100;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-#video {
-  max-width: 800px;
-}
 </style>
 </head>
 <body>
@@ -89,7 +90,7 @@ input:invalid {
   <div id="container" class="container">
     <hr>
 
-    <p>This is a 2FA QR code generator made in JavaScript that helps you make QR codes from 2FA secrets.</p>
+    <p>This is a 2FA QR code generator made in JavaScript that helps you make QR codes from 2FA secrets. Most websites give you both a QR code and an option to manually type the secret. If you need to decode a QR code to obtain the secret, <a id="open_qrdetector">click here</a>.</p>
 
     <noscript>
       <div class="alert alert-danger text-center font-weight-bold" role="alert">
@@ -97,29 +98,40 @@ input:invalid {
       </div>
     </noscript>
 
-    <div class="custom-control custom-checkbox">
-      <p><input class="custom-control-input" type="checkbox" id="decode_qr_checkbox" autocomplete="off"><label class="custom-control-label" for="decode_qr_checkbox">Decode QR code</label></p>
-    </div>
+    <div class="modal" id="qrdetector_modal" tabindex="-1" role="dialog" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Scan QR code</h5>
+          </div>
+          <div class="modal-body" id="qrdetector_body_loading">
+            <div class="alert alert-info" role="alert" id="qrdetector_loading">Loading..</div>
+          </div>
+          <div class="modal-body d-none" id="qrdetector_body">
+            <input class="d-none" type="file" id="input_file" accept="image/*">
 
-    <div class="alert alert-danger d-none" role="alert" id="qrdetector_error">
-      An error occurred while loading the QR decoding library. Please check the browser console for errors.
-    </div>
+            <p>Drag and drop an image, or paste an image or a base64 data URI.</p>
 
-    <div class="d-none" id="decode_qr_container">
-      <input class="d-none" type="file" id="input_file" accept="image/*">
+            <div class="mb-3">
+              <button class="btn btn-primary mb-2 mr-2" id="btn_file">Select file</button>
+              <button class="btn btn-primary mb-2 mr-2" id="btn_webcam">Capture from webcam</button>
+              <button class="btn btn-primary mb-2 mr-2" id="btn_screen_capture">Capture from screen</button>
+              <button class="btn btn-danger mb-2 mr-2 d-none" id="btn_stop_video">Stop</button>
+            </div>
 
-      <div class="alert alert-info" role="alert">
-        Drag and drop an image file, or paste an image or a base64 data URI.
+            <div class="text-center mb-3 d-none" id="qrdetector_video_container">
+              <video id="qrdetector_video" autoplay muted playsinline controlslist="nofullscreen nodownload disablepictureinpicture"></video>
+            </div>
+
+            <div class="alert alert-info" role="alert" id="qrdetector_status"></div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal" id="btn_close_modal">Close</button>
+          </div>
+        </div>
       </div>
-
-      <div class="mb-3">
-        <button class="btn btn-primary mb-2 mr-2" id="btn_file">Select file</button>
-        <button class="btn btn-primary mb-2 mr-2" id="btn_webcam">Capture from webcam</button>
-        <button class="btn btn-primary mb-2 mr-2" id="btn_screen_capture">Capture from screen</button>
-      </div>
-
-      <div class="alert d-none" role="alert" id="decode_qr_result"></div>
     </div>
+    <div class="modal-backdrop show d-none" id="modal_backdrop"></div>
 
     <hr>
 
@@ -232,10 +244,6 @@ input:invalid {
       <li>Uses <a href="https://github.com/lrsjng/kjua">kjua</a> and <a href="https://github.com/stefansundin/qr-detector.js">QrDetector</a>.</li>
       <li>See <a href="https://github.com/google/google-authenticator/wiki/Key-Uri-Format">the docs</a> for the URI format.</li>
     </ul>
-  </div>
-
-  <div id="lightbox" class="d-none">
-    <video id="video" autoplay muted playsinline controlslist="nofullscreen nodownload disablepictureinpicture"></video>
   </div>
 
 <script>
@@ -388,30 +396,74 @@ resize();
 update_uri();
 
 // QR Detector feature (loaded on demand)
-const decode_qr_checkbox = document.getElementById('decode_qr_checkbox');
-const decode_qr_container = document.getElementById('decode_qr_container');
-const decode_qr_result = document.getElementById('decode_qr_result');
-const qrdetector_error = document.getElementById('qrdetector_error');
+const open_qrdetector = document.getElementById('open_qrdetector');
+const qrdetector_modal = document.getElementById('qrdetector_modal');
+const modal_backdrop = document.getElementById('modal_backdrop');
+const qrdetector_body_loading = document.getElementById('qrdetector_body_loading');
+const qrdetector_loading = document.getElementById('qrdetector_loading');
+const qrdetector_body = document.getElementById('qrdetector_body');
 const input_file = document.getElementById('input_file');
 const btn_file = document.getElementById('btn_file');
 const btn_webcam = document.getElementById('btn_webcam');
 const btn_screen_capture = document.getElementById('btn_screen_capture');
-const lightbox = document.getElementById('lightbox');
-const video = document.getElementById('video');
+const btn_stop_video = document.getElementById('btn_stop_video');
+const btn_close_modal = document.getElementById('btn_close_modal');
+const qrdetector_video = document.getElementById('qrdetector_video');
+const qrdetector_video_container = document.getElementById('qrdetector_video_container');
+const qrdetector_status = document.getElementById('qrdetector_status');
+
+// Open and close bootstrap modals without bootstrap js
+function open_modal(element) {
+  element.classList.add('show');
+  modal_backdrop.classList.remove('d-none');
+  document.body.classList.add('modal-open');
+}
+
+function close_modal(element) {
+  element.classList.remove('show');
+  modal_backdrop.classList.add('d-none');
+  document.body.classList.remove('modal-open');
+}
 
 const qr_detector_url = 'https://cdn.jsdelivr.net/gh/stefansundin/qr-detector.js@v0.0.3/dist/QrDetector.min.js';
-decode_qr_checkbox.addEventListener('change', () => {
+open_qrdetector.addEventListener('click', () => {
+  qrdetector_status.textContent = 'Waiting for image..';
+  qrdetector_status.className = 'alert alert-info';
+  open_modal(qrdetector_modal);
+
   if (document.head.querySelector(`script[src="${qr_detector_url}"]`)) {
-    decode_qr_container.classList.toggle('d-none', !decode_qr_checkbox.checked);
     return;
   }
 
-  decode_qr_container.classList.remove('d-none');
+  function stop_video() {
+    qrdetector_video_container.classList.add('d-none');
+    btn_stop_video.classList.add('d-none');
+    if (!qrdetector_video.srcObject) {
+      return;
+    }
+    qrdetector_video.srcObject.getTracks().forEach(track => track.stop());
+    qrdetector_video.srcObject = null;
+  }
+
+  btn_close_modal.addEventListener('click', () => {
+    close_modal(qrdetector_modal);
+    stop_video();
+  });
+
+  qrdetector_modal.addEventListener('click', e => {
+    if (e.target === qrdetector_modal) {
+      btn_close_modal.click();
+    }
+  });
+
   const script = document.createElement('script');
   script.src = qr_detector_url;
   script.integrity = 'sha384-l4Z50lrPxRBklWjkWnICpN/hC5KItIVMjzw97nhqNerGyMx7pWowoWKUU0tuUPJS';
   script.crossOrigin = 'anonymous';
   script.addEventListener('load', () => {
+    qrdetector_body_loading.classList.add('d-none');
+    qrdetector_body.classList.remove('d-none');
+
     const detector = new QrDetector({ formats: ['qr_code'] });
 
     async function handle_file(file) {
@@ -427,8 +479,8 @@ decode_qr_checkbox.addEventListener('change', () => {
         console.log(results);
 
         if (results.length === 0) {
-          decode_qr_result.textContent = 'A QR code was not detected in the image.';
-          decode_qr_result.className = 'alert alert-warning';
+          qrdetector_status.textContent = 'A QR code was not detected in the image.';
+          qrdetector_status.className = 'alert alert-warning';
           return;
         }
 
@@ -440,68 +492,61 @@ decode_qr_checkbox.addEventListener('change', () => {
           uri.value = r.rawValue;
           parse_uri();
           update_qr();
-          decode_qr_result.textContent = 'Success! Scroll down to see the decoded data.';
-          decode_qr_result.className = 'alert alert-success';
+          if (secret.value === '') {
+            continue;
+          }
+          btn_close_modal.click();
           return;
         }
 
-        decode_qr_result.textContent = 'The QR code data does not start with "otpauth://".';
-        decode_qr_result.className = 'alert alert-warning';
+        qrdetector_status.textContent = 'The QR code data does not start with "otpauth://".';
+        qrdetector_status.className = 'alert alert-warning';
       } catch (e) {
         console.error(e);
-        decode_qr_result.textContent = `Error: ${e}`;
-        decode_qr_result.className = 'alert alert-danger';
+        qrdetector_status.textContent = `Error: ${e}`;
+        qrdetector_status.className = 'alert alert-danger';
       }
     }
 
     function process_video_frame() {
       requestAnimationFrame(async () => {
-        if (!video.src && !video.srcObject) {
+        console.log('detecting video frame');
+        if (!qrdetector_video.src && !qrdetector_video.srcObject) {
           return;
         }
-        if (video.readyState <= 1) {
+        if (qrdetector_video.readyState <= 1) {
           process_video_frame();
           return;
         }
 
         try {
-          const results = await detector.detect(video);
-          if (results.length === 0) {
-            if (!video.paused && !video.ended) {
-              process_video_frame();
+          const results = await detector.detect(qrdetector_video);
+          if (results.length > 0) {
+            for (r of results) {
+              if (!r.rawValue.startsWith('otpauth://')) {
+                continue;
+              }
+              uri.value = r.rawValue;
+              parse_uri();
+              update_qr();
+              if (secret.value === '') {
+                continue;
+              }
+              btn_close_modal.click();
+              return;
             }
-            return;
-          }
 
-          for (r of results) {
-            if (!r.rawValue.startsWith('otpauth://')) {
-              continue;
-            }
-            uri.value = r.rawValue;
-            parse_uri();
-            update_qr();
-            decode_qr_result.textContent = 'Success! Scroll down to see the decoded data.';
-            decode_qr_result.className = 'alert alert-success';
-            stop_video();
-            return;
+            qrdetector_status.textContent = 'The QR code data does not start with "otpauth://".';
+            qrdetector_status.className = 'alert alert-warning';
           }
-
-          decode_qr_result.textContent = 'The QR code data does not start with "otpauth://".';
-          decode_qr_result.className = 'alert alert-warning';
         } catch (e) {
           console.error(e);
         }
+        if (!qrdetector_video.paused && !qrdetector_video.ended) {
+          process_video_frame();
+        }
       });
     };
-
-    function stop_video() {
-      lightbox.classList.add('d-none');
-      if (!video.srcObject) {
-        return;
-      }
-      video.srcObject.getTracks().forEach(track => track.stop());
-      video.srcObject = null;
-    }
 
     input_file.addEventListener('change', async e => {
       for (const file of e.target.files) {
@@ -512,22 +557,24 @@ decode_qr_checkbox.addEventListener('change', () => {
 
     btn_webcam.addEventListener('click', async () => {
       btn_webcam.blur();
-      lightbox.classList.remove('d-none');
       try {
-        video.srcObject = await navigator.mediaDevices.getUserMedia({
+        qrdetector_video.srcObject = await navigator.mediaDevices.getUserMedia({
           video: { facingMode: 'environment' },
           audio: false,
         });
-        video.srcObject.getTracks().forEach(t =>
+        qrdetector_video.srcObject.getTracks().forEach(t =>
           t.addEventListener('ended', stop_video),
         );
+        qrdetector_video_container.classList.remove('d-none');
+        btn_stop_video.classList.remove('d-none');
+        qrdetector_status.textContent = 'Waiting for QR code..';
+        qrdetector_status.className = 'alert alert-info';
       }
       catch (e) {
         console.error(e);
         btn_webcam.classList.add('btn-danger');
-        decode_qr_result.textContent = e;
-        decode_qr_result.className = 'alert alert-danger';
-        lightbox.classList.add('d-none');
+        qrdetector_status.textContent = e;
+        qrdetector_status.className = 'alert alert-danger';
         return;
       }
       btn_webcam.classList.remove('btn-danger');
@@ -535,31 +582,33 @@ decode_qr_checkbox.addEventListener('change', () => {
 
     btn_screen_capture.addEventListener('click', async () => {
       btn_screen_capture.blur();
-      lightbox.classList.remove('d-none');
       try {
-        video.srcObject = await navigator.mediaDevices.getDisplayMedia({
+        qrdetector_video.srcObject = await navigator.mediaDevices.getDisplayMedia({
           video: {
             cursor: 'always',
           },
           audio: false,
         });
-        video.srcObject.getTracks().forEach(t =>
+        qrdetector_video.srcObject.getTracks().forEach(t =>
           t.addEventListener('ended', stop_video),
         );
+        qrdetector_video_container.classList.remove('d-none');
+        btn_stop_video.classList.remove('d-none');
+        qrdetector_status.textContent = 'Waiting for QR code..';
+        qrdetector_status.className = 'alert alert-info';
       }
       catch (e) {
         console.error(e);
         btn_screen_capture.classList.add('btn-danger');
-        decode_qr_result.textContent = e;
-        decode_qr_result.className = 'alert alert-danger';
-        lightbox.classList.add('d-none');
+        qrdetector_status.textContent = e;
+        qrdetector_status.className = 'alert alert-danger';
         return;
       }
       btn_screen_capture.classList.remove('btn-danger');
     });
 
-    video.addEventListener('play', () => process_video_frame());
-    lightbox.addEventListener('click', stop_video);
+    btn_stop_video.addEventListener('click', stop_video);
+    qrdetector_video.addEventListener('play', () => process_video_frame());
 
     window.addEventListener('dragover', (e) => {
       e.preventDefault();
@@ -603,7 +652,7 @@ decode_qr_checkbox.addEventListener('change', () => {
 
         if (item.type.startsWith('image/')) {
           handle_file(item.getAsFile());
-        } else if (item.type == 'text/plain') {
+        } else if (item.type === 'text/plain') {
           // Check if pasting a text file that contains a data URI
           // This does not work well in Firefox
           const reader = new FileReader();
@@ -623,9 +672,8 @@ decode_qr_checkbox.addEventListener('change', () => {
     });
   });
   script.addEventListener('error', () => {
-    decode_qr_checkbox.disabled = true;
-    decode_qr_container.classList.add('d-none');
-    qrdetector_error.classList.remove('d-none');
+    qrdetector_loading.textContent = 'An error occurred while loading the QR detection library. Please check the browser console for errors.';
+    qrdetector_loading.className = 'alert alert-danger';
   });
   document.head.appendChild(script);
 });
