@@ -266,6 +266,7 @@ body.modal-open #qr {
       <li>Get <a href="https://github.com/stefansundin/2fa-qr">the source code</a>.</li>
       <li>Uses <a href="https://github.com/lrsjng/kjua">kjua</a> and <a href="https://github.com/stefansundin/qr-detector.js">QrDetector</a>.</li>
       <li>See <a href="https://github.com/google/google-authenticator/wiki/Key-Uri-Format">the docs</a> for the URI format.</li>
+      <li>Download an offline version <a href="https://github.com/stefansundin/2fa-qr/archive/refs/heads/offline.zip">here</a>.</li>
     </ul>
   </div>
 
@@ -549,7 +550,6 @@ open_qrdetector.addEventListener('click', async () => {
 
     function process_video_frame() {
       requestAnimationFrame(async () => {
-        console.log('detecting video frame');
         if (!qrdetector_video.src && !qrdetector_video.srcObject) {
           return;
         }
