@@ -711,18 +711,19 @@ open_qrdetector.addEventListener('click', async () => {
     });
   }
 
-  if (window.BarcodeDetector) {
-    const supportedFormats = await BarcodeDetector.getSupportedFormats();
-    if (supportedFormats.includes('qr_code')) {
-      window.QrDetector = BarcodeDetector;
-      qrdetector_ready();
-      return;
-    }
-  }
+  // Disabled because of https://bugs.chromium.org/p/chromium/issues/detail?id=1382442
+  // if (window.BarcodeDetector) {
+  //   const supportedFormats = await BarcodeDetector.getSupportedFormats();
+  //   if (supportedFormats.includes('qr_code')) {
+  //     window.QrDetector = BarcodeDetector;
+  //     qrdetector_ready();
+  //     return;
+  //   }
+  // }
 
   const script = document.createElement('script');
-  script.src = 'https://cdn.jsdelivr.net/gh/stefansundin/qr-detector.js@v0.0.3/dist/QrDetector.min.js';
-  script.integrity = 'sha384-l4Z50lrPxRBklWjkWnICpN/hC5KItIVMjzw97nhqNerGyMx7pWowoWKUU0tuUPJS';
+  script.src = 'https://cdn.jsdelivr.net/gh/stefansundin/qr-detector.js@v0.0.5/dist/QrDetector.min.js';
+  script.integrity = 'sha384-q+KgD6lkhr01XgU0YB6XB3vs+ufU5/DnQ4oRuxx0qG9lpuSUkWgurNXr86DBJIx5';
   script.crossOrigin = 'anonymous';
   script.addEventListener('load', qrdetector_ready);
   script.addEventListener('error', () => {
