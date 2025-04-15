@@ -293,6 +293,7 @@ const period = document.getElementById("period");
 const uri = document.getElementById("uri");
 const qr = document.getElementById("qr");
 const app_label = document.getElementById("app_label");
+const app_code = document.getElementById("app_code");
 
 function type_changed(e) {
   counter.classList.toggle("d-none", type.value !== "hotp");
@@ -348,6 +349,7 @@ function update_qr() {
   } else {
     app_label.textContent = issuer.value === "" ? label.value : `${issuer.value} (${label.value})`;
   }
+  app_code.textContent = digits.value === "6" ? "123 456" : "1234 5678"
 }
 
 function decode(s) {
